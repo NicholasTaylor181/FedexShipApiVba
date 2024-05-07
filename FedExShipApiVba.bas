@@ -13,6 +13,8 @@ Dim isSD As Boolean
         Dim poNumber As String
         Dim trackingNumber As String
         Dim deliveryDate As String
+        Dim deliveryMethod As String
+        
 
 Sub Main()
 
@@ -186,6 +188,7 @@ Dim newValue As String
     Loop
     
     If wsMacros.Range("Z" & nextRow).value = "SD" Then isSD = True
+    deliveryMethod = wsMacros.Range("Y" & nextRow).value
     
     
     
@@ -247,9 +250,34 @@ Dim newValue As String
     jsonPayload = jsonPayload & "}"
     jsonPayload = jsonPayload & "}"
     jsonPayload = jsonPayload & "],"
+    
+    
+    
+    
+    
+    
+    
     jsonPayload = jsonPayload & """shipDatestamp"": """ & Format(Date, "yyyy-mm-dd") & ""","
-    jsonPayload = jsonPayload & """serviceType"": ""STANDARD_OVERNIGHT"","
-    jsonPayload = jsonPayload & """packagingType"": ""FEDEX_BOX"","
+    
+    
+    If deliveryMethod = "GROUND" Then
+        jsonPayload = jsonPayload & """serviceType"": ""FEDEX_GROUND"","
+        jsonPayload = jsonPayload & """packagingType"": ""YOUR_PACKAGING"","
+        
+    ElseIf deliveryMethod = "STANDARD" Then
+        jsonPayload = jsonPayload & """serviceType"": ""STANDARD_OVERNIGHT"","
+        jsonPayload = jsonPayload & """packagingType"": ""FEDEX_BOX"","
+    
+    ElseIf deliveryMethod = "PRIORITY" Then
+        jsonPayload = jsonPayload & """serviceType"": ""PRIORITY_OVERNIGHT"","
+        jsonPayload = jsonPayload & """packagingType"": ""FEDEX_BOX"","
+            If isSD Then
+            End If
+    End If
+    'serviceType": "PRIORITY_OVERNIGHT"
+    
+'    jsonPayload = jsonPayload & """serviceType"": ""STANDARD_OVERNIGHT"","
+'    jsonPayload = jsonPayload & """packagingType"": ""FEDEX_BOX"","
     jsonPayload = jsonPayload & """pickupType"": ""USE_SCHEDULED_PICKUP"","
     jsonPayload = jsonPayload & """blockInsightVisibility"": false,"
     jsonPayload = jsonPayload & """shippingChargesPayment"": {"
@@ -279,6 +307,19 @@ Dim newValue As String
     jsonPayload = jsonPayload & """requestedPackageLineItems"": ["
     jsonPayload = jsonPayload & "{"
     
+    If deliveryMethod = "GROUND" Then
+        jsonPayload = jsonPayload & """Dimensions"": {"
+'        jsonPayload = jsonPayload & """length"": ""12,"""
+        jsonPayload = jsonPayload & """length"": " & 12 & ","
+        jsonPayload = jsonPayload & """width"": " & 9 & ","
+        jsonPayload = jsonPayload & """height"": " & 5 & ","
+'        jsonPayload = jsonPayload & """width"": ""9,"""
+'        jsonPayload = jsonPayload & """height"": ""5,"""
+        jsonPayload = jsonPayload & """units"": ""IN"""
+            jsonPayload = jsonPayload & "},"
+ '   jsonPayload = jsonPayload & "],"
+        
+    End If
     
     jsonPayload = jsonPayload & """customerReferences"": ["
     jsonPayload = jsonPayload & "{"
