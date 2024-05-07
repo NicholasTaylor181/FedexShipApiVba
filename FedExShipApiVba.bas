@@ -185,7 +185,7 @@ Dim newValue As String
         End If
     Loop
     
-    If wsMacros.Range("Z" & nextRow).value = "SD" Then isSD
+    If wsMacros.Range("Z" & nextRow).value = "SD" Then isSD = True
     
     
     
@@ -343,10 +343,11 @@ Dim newValue As String
     http.Send jsonPayload
 
     ' Check if the request was successful
+        wsMacros.Range("A" & nextRow) = http.Status
     If http.Status = 200 Then
         Dim responseJson As Object
         Set responseJson = JsonConverter.ParseJson(http.responseText)
-        ThisWorkbook.Sheets("Sheet1").Range("A15").value = http.responseText
+ '       ThisWorkbook.Sheets("Sheet1").Range("A15").value = http.responseText
         'Dim trackingNumber As String
 
         trackingNumber = responseJson("output")("transactionShipments")(1)("masterTrackingNumber")
@@ -356,7 +357,7 @@ Dim newValue As String
                 
                 
                 deliveryDate = responseJson("output")("transactionShipments")(1)("pieceResponses")(1)("deliveryDatestamp")
-                Range("I13") = deliveryDate
+         
                 
                 
                 
@@ -407,6 +408,7 @@ Dim newValue As String
     xmlHTTP.Send
     
     ' Check if the request was successful
+
     If xmlHTTP.Status = 200 Then
         ' Create a new FileStream object to write the PDF content
         Dim fso As Object
@@ -421,8 +423,10 @@ Dim newValue As String
         stream.Close
         
                     
+            Call VDP_FORMAT
             
-            wsMacros.Range("A" & nextRow) = "good"
+            
+       '     wsMacros.Range("A" & nextRow) = http.Status
             MsgBox "Shipment created successfully. Label saved as PDF."
         Else
             MsgBox "Failed to retrieve label. Error: " & labelHttp.Status & " - " & labelHttp.StatusText
@@ -522,7 +526,7 @@ Sub ProcessCSVFiles()
             
             
             ' Close the CSV file
-            wbCSV.Close False
+            wbCSV.Close True
             
             ' Move to the next row in Macros sheet
             nextRow = nextRow + 1
@@ -673,11 +677,14 @@ Sub VDP_FORMAT()
 '    MsgBox Mid(PoLocation.Address, 4)
     
 ' 18 + 19+ 20
+    wsMacros.Activate
     If wsMacros.Range("AA" & nextRow) And wsMacros.Range("AB" & nextRow) And wsMacros.Range("AC" & nextRow) Then
 '    If PoLocation.Offset(0, 18) And PoLocation.Offset(0, 19) And PoLocation.Offset(0, 20) Then
 '   frank added a column for saturday delivery that messed this up (221027
-    wsMacros.Range("B" & nextRow).EntireRow.Select
+
+    wsMacros.Rows(nextRow).EntireRow.Select
     wsMacros.Range("B" & nextRow).EntireRow.value = wsMacros.Range("B" & nextRow).EntireRow.value
+
     Else
     MsgBox "Test Failed!"
 
