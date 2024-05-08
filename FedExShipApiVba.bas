@@ -15,6 +15,17 @@ Dim isSD As Boolean
         Dim deliveryDate As String
         Dim deliveryMethod As String
         Dim isOverWeight As Boolean
+'            Dim weightValue As Double
+            
+            Dim boxes As Integer
+    Dim fedexBox As String
+    Dim brakeSize As String
+    Dim brakeQuantity As Integer
+    Dim weight As Double
+    Dim oddBoxWeight As Integer
+    Dim isOddBox As Boolean
+    Dim weightPerBox As Double
+    
         
 
 Sub Main()
@@ -25,8 +36,14 @@ Sub Main()
     Call CheckDateAndSelectFolder
     Call ProcessCSVFiles
     
+    
+    '''''''''''''''''''''''''''''add logic to check if saturday delivery is actually on a friday, if not ignore
+    
+    
+    'need to add puerto rico, saturday, multi shipment
+    
+    
 
-'ask user for folder to save pdfs at start. then put a check if the global file path variable is empty, if it is ask, otherwise just run macro
 
 
 
@@ -170,18 +187,18 @@ Dim newValue As String
     recipientCountryCode = "US"
     
     ' Package information
-    Dim weightValue As Double
-    weightValue = wsMacros.Range("W" & nextRow).value
+'    Dim weightValue As Double
+    weight = wsMacros.Range("W" & nextRow).value
     
     ' Loop until the user enters a value
-    Do While weightValue = 0
+    Do While weight = 0
         ' Prompt the user for a new value
         newValue = InputBox("Enter weight for " & wsMacros.Range("D" & nextRow).value, "Enter")
         
         ' Check if user entered a value
         If newValue <> "" Then
             ' Replace A1 value with the user's input
-            weightValue = newValue * wsMacros.Range("F" & nextRow).value
+            weight = newValue * wsMacros.Range("F" & nextRow).value
         Else
             ' Notify the user that a value is required
             MsgBox "Please enter weight.", vbExclamation
@@ -350,7 +367,7 @@ Dim newValue As String
     
     
     jsonPayload = jsonPayload & """weight"": {"
-    jsonPayload = jsonPayload & """value"": " & weightValue & ","
+    jsonPayload = jsonPayload & """value"": " & weight & ","
     jsonPayload = jsonPayload & """units"": ""LB"""
     jsonPayload = jsonPayload & "}"
     jsonPayload = jsonPayload & "}"
@@ -739,118 +756,85 @@ Sub VDP_FORMAT()
 End Sub
 
 Sub test()
-    Dim boxes As Integer
-    Dim fedexBox As String
-    Dim brakeSize As String
-    Dim brakeQuantity As Integer
-    Dim weight As Integer
-    Dim oddBoxWeight As Integer
-    Dim isOddBox As Boolean
+'    Dim boxes As Integer
+'    Dim fedexBox As String
+'    Dim brakeSize As String
+'    Dim brakeQuantity As Integer
+'    Dim weight As Double
+'    Dim oddBoxWeight As Integer
+'    Dim isOddBox As Boolean
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''add something to shipping label that designates exact quantity in each box if possible.
 
    ' boxes = 5
     fedexBox = "GROUND"
-    brakeSize = "S"
-    brakeQuantity = 10
-    weight = 15
+    brakeSize = "M"
+    brakeQuantity = 14
+    weight = 35
     
     Set wsMacros = ThisWorkbook.Sheets("Sheet1")
     isOddBox = False
     
     
-    If fedexBox = "Ground" Then
+    If fedexBox = "GROUND" Then
         If brakeSize = "L" Then
             If brakeQuantity = 1 Then
                 boxes = 1
-                weightperbox = weight
+                weightPerBox = weight
             Else
                     boxes = brakeQuantity
-                    weightperbox = weight / brakeQuantity
+                    weightPerBox = weight / brakeQuantity
             End If
         ElseIf brakeSize = "M" Then
-            If brakeQuantity < 4 Then
-                boxes = 1
-                weightperbox = weight
-            Else
-                boxes = (brakeQuantity - brakeQuantity Mod 3) / 3
-                weightperbox = (weight / brakeQuantity) * 3
-                If brakeQuantity Mod 3 <> 0 Then
-                    isOddBox = True
-                    oddBoxWeight = weight / brakeQuantity * brakeQuantity Mod 3
-                End If
-            End If
-'                If brakeQuantity Mod 3 = 0 Then
-'                    boxes = brakeQuantity / 3
-'                    weightperbox = weight / boxes
-'                ElseIf brakeQuantity Mod 3 = 1 Then
-'                    boxes = (brakeQuantity - 1) / 3
-'                    weightperbox = (weight / brakeQuantity) * 3
-'                    isOddBox = True
-'                    oddBoxWeight = (weight / brakeQuantity)
-'                ElseIf brakeQuantity Mod 3 = 2 Then
-'                    boxes = (brakeQuantity - 2) / 3
-'                    weightperbox = (weight / brakeQuantity) * 3
-'                    isOddBox = True
-'                    oddBoxWeight = (weight / brakeQuantity) * 2
-'                End If
-'            End If
+            boxLoop (3)
         ElseIf brakeSize = "S" Then
-            If brakeQuantity < 6 Then
-                boxes = 1
-                weightperbox = weight
-            Else
-                boxes = (brakeQuantity - brakeQuantity Mod 5) / 5
-                weightperbox = (weight / brakeQuantity) * 5
-                If brakeQuantity Mod 5 <> 0 Then
-                    isOddBox = True
-                    oddBoxWeight = weight / brakeQuantity * brakeQuantity Mod 5
-                End If
-            End If
-            
+          boxLoop (5)
         End If
-        
-    
     Else
-    
         If brakeSize = "L" Then
-            If brakeQuantity < 3 Then
-                boxes = 1
-                weightperbox = weight
-            Else
-                boxes = (brakeQuantity - brakeQuantity Mod 2) / 2
-                weightperbox = (weight / brakeQuantity) * 2
-                If brakeQuantity Mod 2 <> 0 Then
-                    isOddBox = True
-                    oddBoxWeight = weight / brakeQuantity * brakeQuantity Mod 2
-                End If
-            End If
+            boxLoop (2)
         ElseIf brakeSize = "M" Then
-            If brakeQuantity < 5 Then
-                boxes = 1
-                weightperbox = weight
-            Else
-                boxes = (brakeQuantity - brakeQuantity Mod 4) / 4
-                weightperbox = (weight / brakeQuantity) * 4
-                If brakeQuantity Mod 4 <> 0 Then
-                    isOddBox = True
-                    oddBoxWeight = weight / brakeQuantity * brakeQuantity Mod 4
-                End If
-            End If
+            boxLoop (4)
         ElseIf brakeSize = "S" Then
-            If brakeQuantity < 9 Then
-                boxes = 1
-                weightperbox = weight
-            Else
-                boxes = (brakeQuantity - brakeQuantity Mod 8) / 8
-                weightperbox = (weight / brakeQuantity) * 8
-                If brakeQuantity Mod 8 <> 0 Then
-                    isOddBox = True
-                    oddBoxWeight = weight / brakeQuantity * brakeQuantity Mod 8
-                End If
-            End If
+            Call modWeight(8)
         End If
     End If
-'need to add logic that checks if individual boxes weigh more than 20.
-
-
 End Sub
 
+
+Sub modWeight(modQuantity As Integer)
+                boxes = (brakeQuantity - brakeQuantity Mod modQuantity) / modQuantity
+                weightPerBox = (weight / brakeQuantity) * modQuantity
+                isOddBox = False
+                If brakeQuantity Mod modQuantity <> 0 Then
+                    isOddBox = True
+                    oddBoxWeight = (weight / brakeQuantity) * (brakeQuantity Mod modQuantity)
+                End If
+End Sub
+Sub boxLoop(startMod As Integer)
+    Set wsMacros = ThisWorkbook.Sheets("Sheet1")
+    isOddBox = False
+    weightPerBox = (weight / brakeQuantity) * startMod
+    If startMod + 1 > brakeQuantity Then
+        If weight < 20 Then
+            boxes = 1
+            weightPerBox = weight
+        Else
+            modWeight (startMod)
+            Do While weightPerBox > 20
+                startMod = startMod - 1
+                modWeight (startMod)
+            Loop
+        End If
+    Else
+        modWeight (startMod)
+        Do While weightPerBox > 20
+            startMod = startMod - 1
+            modWeight (startMod)
+        Loop
+    End If
+    wsMacros.Range("K2") = weightPerBox
+    wsMacros.Range("L2") = boxes
+    If isOddBox Then
+        wsMacros.Range("M2") = oddBoxWeight
+    End If
+End Sub
