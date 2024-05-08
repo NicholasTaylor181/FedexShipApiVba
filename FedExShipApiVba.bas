@@ -38,7 +38,7 @@ Sub Main()
     
     
     '''''''''''''''''''''''''''''add logic to check if saturday delivery is actually on a friday, if not ignore
-    
+    '''''''''''''''''''''''''add logic for sizes other than the typical L M S
     
     'need to add puerto rico, saturday, multi shipment
     
@@ -295,6 +295,14 @@ Dim newValue As String
         jsonPayload = jsonPayload & """serviceType"": ""PRIORITY_OVERNIGHT"","
         jsonPayload = jsonPayload & """packagingType"": ""FEDEX_BOX"","
             If isSD Then
+            
+                jsonPayload = jsonPayload & """shipmentSpecialServices"": {"
+                jsonPayload = jsonPayload & """specialServiceTypes"": ["
+                jsonPayload = jsonPayload & """SATURDAY_DELIVERY"""
+                jsonPayload = jsonPayload & "]"
+                jsonPayload = jsonPayload & "},"
+            
+            
             End If
     End If
     'serviceType": "PRIORITY_OVERNIGHT"
@@ -794,6 +802,9 @@ Sub test()
             boxLoop (2)
         ElseIf brakeSize = "M" Then
             boxLoop (4)
+            '________________________________________________________________logic for express smalls_________________________________________________
+            
+            
         ElseIf brakeSize = "S" Then
             Call modWeight(8)
         End If
