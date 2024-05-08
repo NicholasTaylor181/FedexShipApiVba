@@ -14,6 +14,7 @@ Dim isSD As Boolean
         Dim trackingNumber As String
         Dim deliveryDate As String
         Dim deliveryMethod As String
+        Dim isOverWeight As Boolean
         
 
 Sub Main()
@@ -170,7 +171,7 @@ Dim newValue As String
     
     ' Package information
     Dim weightValue As Double
-    weightValue = wsMacros.Range("V" & nextRow).value
+    weightValue = wsMacros.Range("W" & nextRow).value
     
     ' Loop until the user enters a value
     Do While weightValue = 0
@@ -187,8 +188,13 @@ Dim newValue As String
         End If
     Loop
     
-    If wsMacros.Range("Z" & nextRow).value = "SD" Then isSD = True
-    deliveryMethod = wsMacros.Range("Y" & nextRow).value
+    If wsMacros.Range("AA" & nextRow).value = "SD" Then isSD = True
+    deliveryMethod = wsMacros.Range("Z" & nextRow).value
+    
+    
+    
+    
+    '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''insert check for overweight, if so skip and put error in column a
     
     
     
@@ -685,7 +691,7 @@ Sub VDP_FORMAT()
     
     
   '  Set PoLocation = Workbooks(VdpSheetName).Worksheets("BASE BEFORE").Range("C:C").Find(PoNum, LookIn:=xlValues, searchdirection:=xlPrevious)
-    Range("R2") = wsMacros.Range("V" & nextRow).value
+    Range("R2") = wsMacros.Range("W" & nextRow).value
     Range("W2").value = wsMacros.Range("S" & nextRow).value
    
 '    Range("R2").value = PoLocation.Offset(0, 15)
@@ -716,10 +722,10 @@ Sub VDP_FORMAT()
     
     
 '    MsgBox Mid(PoLocation.Address, 4)
-    
+        
 ' 18 + 19+ 20
     wsMacros.Activate
-    If wsMacros.Range("AA" & nextRow) And wsMacros.Range("AB" & nextRow) And wsMacros.Range("AC" & nextRow) Then
+    If wsMacros.Range("AB" & nextRow) And wsMacros.Range("AC" & nextRow) And wsMacros.Range("AD" & nextRow) Then
 '    If PoLocation.Offset(0, 18) And PoLocation.Offset(0, 19) And PoLocation.Offset(0, 20) Then
 '   frank added a column for saturday delivery that messed this up (221027
 
@@ -733,10 +739,117 @@ Sub VDP_FORMAT()
 End Sub
 
 Sub test()
-    Set wsMacros = ThisWorkbook.Sheets("BASE BEFORE")
-    nextRow = 4709
-    wsMacros.Range("B" & nextRow).EntireRow.Select
+    Dim boxes As Integer
+    Dim fedexBox As String
+    Dim brakeSize As String
+    Dim brakeQuantity As Integer
+    Dim weight As Integer
+    Dim oddBoxWeight As Integer
+    Dim isOddBox As Boolean
+
+   ' boxes = 5
+    fedexBox = "GROUND"
+    brakeSize = "S"
+    brakeQuantity = 10
+    weight = 15
     
+    Set wsMacros = ThisWorkbook.Sheets("Sheet1")
+    isOddBox = False
+    
+    
+    If fedexBox = "Ground" Then
+        If brakeSize = "L" Then
+            If brakeQuantity = 1 Then
+                boxes = 1
+                weightperbox = weight
+            Else
+                    boxes = brakeQuantity
+                    weightperbox = weight / brakeQuantity
+            End If
+        ElseIf brakeSize = "M" Then
+            If brakeQuantity < 4 Then
+                boxes = 1
+                weightperbox = weight
+            Else
+                boxes = (brakeQuantity - brakeQuantity Mod 3) / 3
+                weightperbox = (weight / brakeQuantity) * 3
+                If brakeQuantity Mod 3 <> 0 Then
+                    isOddBox = True
+                    oddBoxWeight = weight / brakeQuantity * brakeQuantity Mod 3
+                End If
+            End If
+'                If brakeQuantity Mod 3 = 0 Then
+'                    boxes = brakeQuantity / 3
+'                    weightperbox = weight / boxes
+'                ElseIf brakeQuantity Mod 3 = 1 Then
+'                    boxes = (brakeQuantity - 1) / 3
+'                    weightperbox = (weight / brakeQuantity) * 3
+'                    isOddBox = True
+'                    oddBoxWeight = (weight / brakeQuantity)
+'                ElseIf brakeQuantity Mod 3 = 2 Then
+'                    boxes = (brakeQuantity - 2) / 3
+'                    weightperbox = (weight / brakeQuantity) * 3
+'                    isOddBox = True
+'                    oddBoxWeight = (weight / brakeQuantity) * 2
+'                End If
+'            End If
+        ElseIf brakeSize = "S" Then
+            If brakeQuantity < 6 Then
+                boxes = 1
+                weightperbox = weight
+            Else
+                boxes = (brakeQuantity - brakeQuantity Mod 5) / 5
+                weightperbox = (weight / brakeQuantity) * 5
+                If brakeQuantity Mod 5 <> 0 Then
+                    isOddBox = True
+                    oddBoxWeight = weight / brakeQuantity * brakeQuantity Mod 5
+                End If
+            End If
+            
+        End If
+        
+    
+    Else
+    
+        If brakeSize = "L" Then
+            If brakeQuantity < 3 Then
+                boxes = 1
+                weightperbox = weight
+            Else
+                boxes = (brakeQuantity - brakeQuantity Mod 2) / 2
+                weightperbox = (weight / brakeQuantity) * 2
+                If brakeQuantity Mod 2 <> 0 Then
+                    isOddBox = True
+                    oddBoxWeight = weight / brakeQuantity * brakeQuantity Mod 2
+                End If
+            End If
+        ElseIf brakeSize = "M" Then
+            If brakeQuantity < 5 Then
+                boxes = 1
+                weightperbox = weight
+            Else
+                boxes = (brakeQuantity - brakeQuantity Mod 4) / 4
+                weightperbox = (weight / brakeQuantity) * 4
+                If brakeQuantity Mod 4 <> 0 Then
+                    isOddBox = True
+                    oddBoxWeight = weight / brakeQuantity * brakeQuantity Mod 4
+                End If
+            End If
+        ElseIf brakeSize = "S" Then
+            If brakeQuantity < 9 Then
+                boxes = 1
+                weightperbox = weight
+            Else
+                boxes = (brakeQuantity - brakeQuantity Mod 8) / 8
+                weightperbox = (weight / brakeQuantity) * 8
+                If brakeQuantity Mod 8 <> 0 Then
+                    isOddBox = True
+                    oddBoxWeight = weight / brakeQuantity * brakeQuantity Mod 8
+                End If
+            End If
+        End If
+    End If
+'need to add logic that checks if individual boxes weigh more than 20.
 
 
 End Sub
