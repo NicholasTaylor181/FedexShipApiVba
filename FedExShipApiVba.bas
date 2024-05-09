@@ -25,6 +25,9 @@ Dim isSD As Boolean
     Dim oddBoxWeight As Integer
     Dim isOddBox As Boolean
     Dim weightPerBox As Double
+    Dim shipQuantity As Integer
+    Dim oddQuantity As Integer
+    
     
         
 
@@ -209,6 +212,28 @@ Dim newValue As String
     deliveryMethod = wsMacros.Range("Z" & nextRow).value
     
     
+    brakeQuantity = wsMacros.Range("F" & nextRow).value
+    brakeSize = wsMacros.Range("V" & nextRow).value
+    
+    Do While brakeSize = "0"
+        ' Prompt the user for a new value
+        newValue = InputBox("Enter size for " & wsMacros.Range("D" & nextRow).value, "Enter")
+        
+        ' Check if user entered a value
+        If newValue <> "" Then
+            ' Replace A1 value with the user's input
+            brakeSize = newValue
+        Else
+            ' Notify the user that a value is required
+            MsgBox "Please enter size.", vbExclamation
+        End If
+    Loop
+    
+    
+    
+    Call assignBoxSize
+    
+    
     
     
     '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''insert check for overweight, if so skip and put error in column a
@@ -316,21 +341,6 @@ Dim newValue As String
     jsonPayload = jsonPayload & "},"
     
     
-    
-    
-'    jsonPayload = jsonPayload & """customsClearanceDetail"": {"
-'
-'    jsonPayload = jsonPayload & """commercialInvoice"": {"
-'    jsonPayload = jsonPayload & """customerReferences"": ["
-'    jsonPayload = jsonPayload & "{"
-'    jsonPayload = jsonPayload & """customerReferenceType"": ""INVOICE_NUMBER"","
-'    jsonPayload = jsonPayload & """value"": """ & invoiceNo & """"
-'    jsonPayload = jsonPayload & "}"
-'    jsonPayload = jsonPayload & "],"
-'    jsonPayload = jsonPayload & "},"
-'    jsonPayload = jsonPayload & "},"
-    
-    
     jsonPayload = jsonPayload & """labelSpecification"": {"
     jsonPayload = jsonPayload & """imageType"": ""PDF"","
     jsonPayload = jsonPayload & """labelStockType"": ""PAPER_85X11_TOP_HALF_LABEL"""
@@ -338,7 +348,7 @@ Dim newValue As String
     jsonPayload = jsonPayload & """requestedPackageLineItems"": ["
     jsonPayload = jsonPayload & "{"
     
-    If deliveryMethod = "GROUND" Then
+    If deliveryMethod = "GROUND" And boxes = 1 And Not isOddBox Then
         jsonPayload = jsonPayload & """Dimensions"": {"
 '        jsonPayload = jsonPayload & """length"": ""12,"""
         jsonPayload = jsonPayload & """length"": " & 12 & ","
@@ -351,38 +361,98 @@ Dim newValue As String
  '   jsonPayload = jsonPayload & "],"
         
     End If
+    If boxes > 1 Or isOddBox Then
+            jsonPayload = jsonPayload & """groupPackageCount"": " & boxes & ","
+            jsonPayload = jsonPayload & """weight"": {"
+            jsonPayload = jsonPayload & """value"": " & weightPerBox & ","
+            jsonPayload = jsonPayload & """units"": ""LB"""
+            jsonPayload = jsonPayload & "},"
+            
+            If deliveryMethod = "GROUND" Then
+                jsonPayload = jsonPayload & """Dimensions"": {"
+                jsonPayload = jsonPayload & """length"": " & 12 & ","
+                jsonPayload = jsonPayload & """width"": " & 9 & ","
+                jsonPayload = jsonPayload & """height"": " & 5 & ","
+                jsonPayload = jsonPayload & """units"": ""IN"""
+                jsonPayload = jsonPayload & "},"
+            End If
+            jsonPayload = jsonPayload & """customerReferences"": ["
+            jsonPayload = jsonPayload & "{"
+            jsonPayload = jsonPayload & """customerReferenceType"": ""P_O_NUMBER"","
+            jsonPayload = jsonPayload & """value"": """ & invoiceNo & """"
+            jsonPayload = jsonPayload & "},"
+            jsonPayload = jsonPayload & "{"
+            jsonPayload = jsonPayload & """customerReferenceType"": ""CUSTOMER_REFERENCE"","
+            jsonPayload = jsonPayload & """value"": """ & wsMacros.Range("D" & nextRow).value & "-" & shipQuantity & """"
+            jsonPayload = jsonPayload & "}"
+            jsonPayload = jsonPayload & "]"
+            
+        
+        
     
-    jsonPayload = jsonPayload & """customerReferences"": ["
-    jsonPayload = jsonPayload & "{"
-'    jsonPayload = jsonPayload & """customerReferenceType"": ""INVOICE_NUMBER"","
-    jsonPayload = jsonPayload & """customerReferenceType"": ""P_O_NUMBER"","
-    jsonPayload = jsonPayload & """value"": """ & invoiceNo & """"
+    
+        If isOddBox Then
     jsonPayload = jsonPayload & "},"
     jsonPayload = jsonPayload & "{"
-    jsonPayload = jsonPayload & """customerReferenceType"": ""CUSTOMER_REFERENCE"","
-    jsonPayload = jsonPayload & """value"": """ & wsMacros.Range("M" & nextRow).value & """"
+            jsonPayload = jsonPayload & """groupPackageCount"": " & 1 & ","
+            jsonPayload = jsonPayload & """weight"": {"
+            jsonPayload = jsonPayload & """value"": " & oddBoxWeight & ","
+            jsonPayload = jsonPayload & """units"": ""LB"""
+            jsonPayload = jsonPayload & "},"
+            
+            If deliveryMethod = "GROUND" Then
+                jsonPayload = jsonPayload & """Dimensions"": {"
+                jsonPayload = jsonPayload & """length"": " & 12 & ","
+                jsonPayload = jsonPayload & """width"": " & 9 & ","
+                jsonPayload = jsonPayload & """height"": " & 5 & ","
+                jsonPayload = jsonPayload & """units"": ""IN"""
+                jsonPayload = jsonPayload & "},"
+            End If
+            jsonPayload = jsonPayload & """customerReferences"": ["
+            jsonPayload = jsonPayload & "{"
+            jsonPayload = jsonPayload & """customerReferenceType"": ""P_O_NUMBER"","
+            jsonPayload = jsonPayload & """value"": """ & invoiceNo & """"
+            jsonPayload = jsonPayload & "},"
+            jsonPayload = jsonPayload & "{"
+            jsonPayload = jsonPayload & """customerReferenceType"": ""CUSTOMER_REFERENCE"","
+            jsonPayload = jsonPayload & """value"": """ & wsMacros.Range("D" & nextRow).value & "-" & oddQuantity & """"
+            jsonPayload = jsonPayload & "}"
+            jsonPayload = jsonPayload & "]"
+            jsonPayload = jsonPayload & "}"
+            
+        Else
+        
+            jsonPayload = jsonPayload & "}"
+        
+        End If
     
-    jsonPayload = jsonPayload & "}"
-    jsonPayload = jsonPayload & "],"
     
     
     
     
-  '  jsonPayload = jsonPayload & """phoneNumber"": " & recipientPhoneNumber & ","
+
+    Else
+        jsonPayload = jsonPayload & """customerReferences"": ["
+        jsonPayload = jsonPayload & "{"
+        jsonPayload = jsonPayload & """customerReferenceType"": ""P_O_NUMBER"","
+        jsonPayload = jsonPayload & """value"": """ & invoiceNo & """"
+        jsonPayload = jsonPayload & "},"
+        jsonPayload = jsonPayload & "{"
+        jsonPayload = jsonPayload & """customerReferenceType"": ""CUSTOMER_REFERENCE"","
+        jsonPayload = jsonPayload & """value"": """ & wsMacros.Range("M" & nextRow).value & """"
     
+        jsonPayload = jsonPayload & "}"
+        jsonPayload = jsonPayload & "],"
+        jsonPayload = jsonPayload & """weight"": {"
+        jsonPayload = jsonPayload & """value"": " & weight & ","
+        jsonPayload = jsonPayload & """units"": ""LB"""
+        jsonPayload = jsonPayload & "}"
+        jsonPayload = jsonPayload & "}"
+    End If
+        jsonPayload = jsonPayload & "]"
+        jsonPayload = jsonPayload & "},"
     
-    
-    
-    
-    jsonPayload = jsonPayload & """weight"": {"
-    jsonPayload = jsonPayload & """value"": " & weight & ","
-    jsonPayload = jsonPayload & """units"": ""LB"""
-    jsonPayload = jsonPayload & "}"
-    jsonPayload = jsonPayload & "}"
-'    jsonPayload = jsonPayload & "],"
-    
-    jsonPayload = jsonPayload & "]"
-    jsonPayload = jsonPayload & "},"
+
     
     jsonPayload = jsonPayload & """accountNumber"": {"
     jsonPayload = jsonPayload & """value"": """ & accountNumber & """"
@@ -396,6 +466,7 @@ Dim newValue As String
    
    
    
+   wsMacros.Range("AP" & nextRow) = jsonPayload
    
    
    
@@ -443,8 +514,16 @@ Dim newValue As String
 '        labelUrl = responseJson("labelUrl")
        ' labelUrl = responseJson("output")("transactionShipments")(1)("serviceType")
        ' labelUrl = responseJson("output")("transactionShipments")(1)("pieceResponses")(1)("masterTrackingNumber")
-        labelUrl = responseJson("output")("transactionShipments")(1)("pieceResponses")(1)("packageDocuments")(1)("url")
+ '
+ 
+    If isOddBox Or boxes > 1 Then
+
+        labelUrl = responseJson("output")("transactionShipments")(1)("shipmentDocuments")(1)("url")
+    Else
+         labelUrl = responseJson("output")("transactionShipments")(1)("pieceResponses")(1)("packageDocuments")(1)("url")
+    End If
         
+                ThisWorkbook.Sheets("Sheet1").Range("M2") = labelUrl
         deliveryDate = Left(deliveryDate, 4) & Mid(deliveryDate, 6, 2) & Right(deliveryDate, 2)
         
         
@@ -478,22 +557,49 @@ Dim newValue As String
     
     ' Send the request
     xmlHTTP.Send
+    Dim stream As Object
     
     ' Check if the request was successful
 
     If xmlHTTP.Status = 200 Then
         ' Create a new FileStream object to write the PDF content
-        Dim fso As Object
-        Set fso = CreateObject("Scripting.FileSystemObject")
-        Dim stream As Object
-        Set stream = fso.CreateTextFile(labelFilePath, True)
+        
+        
+        ' Create a new Stream object to write the PDF content
+    Set stream = CreateObject("ADODB.Stream")
+    
+    ' Set stream properties
+    stream.Type = 1 ' adTypeBinary
+    stream.Open
+    
+    ' Write the response content (PDF) to the Stream
+    stream.Write xmlHTTP.ResponseBody
+    
+    ' Save the Stream to a file
+    stream.SaveToFile labelFilePath, 2 ' adSaveCreateOverWrite
+    
+    ' Close the Stream
+    stream.Close
+        
+        
+        
+        
+        
+        
+        
+        
+        '______________________________________________________________________________________
+'        Dim fso As Object
+'        Set fso = CreateObject("Scripting.FileSystemObject")
+'        Dim stream As Object
+'        Set stream = fso.CreateTextFile(labelFilePath, True)
         
         ' Write the response content (webpage) to the FileStream
-        stream.Write xmlHTTP.responseText
+'        stream.Write xmlHTTP.responseText
         
         ' Close the FileStream
-        stream.Close
-        
+'        stream.Close
+        '_________________________________________________________________________________________
                     
             Call VDP_FORMAT
             
@@ -589,6 +695,8 @@ Sub ProcessCSVFiles()
             
             
             'put shipping macro in here
+            
+            
             
             Call CreateShipment
             
@@ -763,7 +871,7 @@ Sub VDP_FORMAT()
     End If
 End Sub
 
-Sub test()
+Sub assignBoxSize()
 '    Dim boxes As Integer
 '    Dim fedexBox As String
 '    Dim brakeSize As String
@@ -774,12 +882,12 @@ Sub test()
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''add something to shipping label that designates exact quantity in each box if possible.
 
    ' boxes = 5
-    fedexBox = "GROUND"
-    brakeSize = "M"
-    brakeQuantity = 14
-    weight = 35
+'    fedexBox = "GROUND"
+'    brakeSize = "S"
+'    brakeQuantity = 14
+'    weight = 80
     
-    Set wsMacros = ThisWorkbook.Sheets("Sheet1")
+'    Set wsMacros = ThisWorkbook.Sheets("Sheet1")
     isOddBox = False
     
     
@@ -791,6 +899,7 @@ Sub test()
             Else
                     boxes = brakeQuantity
                     weightPerBox = weight / brakeQuantity
+                    shipQuantity = 1
             End If
         ElseIf brakeSize = "M" Then
             boxLoop (3)
@@ -802,11 +911,8 @@ Sub test()
             boxLoop (2)
         ElseIf brakeSize = "M" Then
             boxLoop (4)
-            '________________________________________________________________logic for express smalls_________________________________________________
-            
-            
         ElseIf brakeSize = "S" Then
-            Call modWeight(8)
+            boxLoop (8)
         End If
     End If
 End Sub
@@ -822,7 +928,16 @@ Sub modWeight(modQuantity As Integer)
                 End If
 End Sub
 Sub boxLoop(startMod As Integer)
-    Set wsMacros = ThisWorkbook.Sheets("Sheet1")
+
+
+
+'Dim shipQuantity As Integer
+'    Dim oddQuantity As Integer
+
+
+
+
+'    Set wsMacros = ThisWorkbook.Sheets("Sheet1")
     isOddBox = False
     weightPerBox = (weight / brakeQuantity) * startMod
     If startMod + 1 > brakeQuantity Then
@@ -843,9 +958,19 @@ Sub boxLoop(startMod As Integer)
             modWeight (startMod)
         Loop
     End If
-    wsMacros.Range("K2") = weightPerBox
-    wsMacros.Range("L2") = boxes
-    If isOddBox Then
-        wsMacros.Range("M2") = oddBoxWeight
+    
+    If boxes > 1 Or isOddBox Then
+        shipQuantity = startMod
+        If isOddBox Then
+            oddQuantity = brakeQuantity Mod startMod
+        End If
     End If
+ '   wsMacros.Range("K2") = weightPerBox
+ '   wsMacros.Range("L2") = boxes
+ '   If isOddBox Then
+ '       wsMacros.Range("M2") = oddBoxWeight
+ '   End If
+    
+ '   wsMacros.Range("N2") = shipQuantity
+ '   wsMacros.Range("O2") = oddQuantity
 End Sub
