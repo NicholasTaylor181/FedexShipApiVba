@@ -1,4 +1,3 @@
-Attribute VB_Name = "Module1"
 Dim apiKey As String
 Dim apiPassword As String
 Dim accountNumber As String
@@ -184,7 +183,13 @@ Dim newValue As String
     
     
     Dim recipientPostalCode As String
-    recipientPostalCode = wsMacros.Range("L" & nextRow).value
+        recipientPostalCode = CStr(wsMacros.Range("L" & nextRow).value)
+ '   recipientPostalCode = wsMacros.Range("L" & nextRow).value
+       Do While Len(recipientPostalCode) < 5
+           recipientPostalCode = "0" & recipientPostalCode
+       Loop
+   ' recipientPostalCode = CStr(wsMacros.Range("L" & nextRow).value)
+        
     
     Dim recipientCountryCode As String
     recipientCountryCode = "US"
@@ -292,7 +297,8 @@ Dim newValue As String
     jsonPayload = jsonPayload & """stateOrProvinceCode"": """ & recipientStateCode & ""","
 '    jsonPayload = jsonPayload & """postalCode"": """ & recipientPostalCode & ""","
     
-    jsonPayload = jsonPayload & """postalCode"": " & recipientPostalCode & ","
+'    jsonPayload = jsonPayload & """postalCode"": " & recipientPostalCode & ","
+    jsonPayload = jsonPayload & """postalCode"": """ & recipientPostalCode & ""","
     
     jsonPayload = jsonPayload & """countryCode"": """ & recipientCountryCode & """"
     jsonPayload = jsonPayload & "}"
@@ -605,12 +611,12 @@ Dim newValue As String
             
             
        '     wsMacros.Range("A" & nextRow) = http.Status
-            MsgBox "Shipment created successfully. Label saved as PDF."
+  '          MsgBox "Shipment created successfully. Label saved as PDF."
         Else
-            MsgBox "Failed to retrieve label. Error: " & labelHttp.Status & " - " & labelHttp.StatusText
+  '          MsgBox "Failed to retrieve label. Error: " & labelHttp.Status & " - " & labelHttp.StatusText
         End If
     Else
-        MsgBox "Failed to create shipment. Error: " & http.Status & " - " & http.StatusText
+  '      MsgBox "Failed to create shipment. Error: " & http.Status & " - " & http.StatusText
     End If
     
         Set xmlHTTP = Nothing
