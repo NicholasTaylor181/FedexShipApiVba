@@ -26,6 +26,8 @@ Dim isSD As Boolean
     Dim weightPerBox As Double
     Dim shipQuantity As Integer
     Dim oddQuantity As Integer
+    Dim attempts As Integer
+    Dim isShipped As Boolean
     
     
         
@@ -213,7 +215,8 @@ Dim newValue As String
         End If
     Loop
     
-    If wsMacros.Range("AA" & nextRow).value = "SD" Then isSD = True
+    If wsMacros.Range("AA" & nextRow).value = "SD" Then isSD = True Else isSD = False
+    
     deliveryMethod = wsMacros.Range("Z" & nextRow).value
     
     
@@ -473,8 +476,12 @@ Dim newValue As String
    
    
    wsMacros.Range("AP" & nextRow) = jsonPayload
+   isShipped = False
+   attempts = 0
    
-   
+ '  Do While attempts < 2 Or Not isShipped
+   Do While attempts < 3
+      wsMacros.Range("AQ" & nextRow) = attempts
    
 
     ' Make the API request
@@ -608,16 +615,23 @@ Dim newValue As String
         '_________________________________________________________________________________________
                     
             Call VDP_FORMAT
-            
+   '             isShipped = True
+                 attempts = 20
+                 
             
        '     wsMacros.Range("A" & nextRow) = http.Status
   '          MsgBox "Shipment created successfully. Label saved as PDF."
         Else
+            attempts = attempts + 1
   '          MsgBox "Failed to retrieve label. Error: " & labelHttp.Status & " - " & labelHttp.StatusText
         End If
     Else
+        attempts = attempts + 1
   '      MsgBox "Failed to create shipment. Error: " & http.Status & " - " & http.StatusText
     End If
+    
+
+    Loop
     
         Set xmlHTTP = Nothing
 End Sub
