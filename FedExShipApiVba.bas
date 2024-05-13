@@ -1,6 +1,7 @@
 Dim apiKey As String
 Dim apiPassword As String
 Dim accountNumber As String
+Dim thirdPartyAccountNumber As String
 Dim accessToken As String
 Dim nextRow As Long
 Dim isStreetLine2 As Boolean
@@ -45,6 +46,7 @@ Sub initialize()
     apiKey = "your api key"
     apiPassword = "your api password"
     accountNumber = "your account number"
+    thirdPartyAccountNumber = "your third party account number"
     
     ' Access token
     accessToken = GetAccessToken(apiKey, apiPassword)
@@ -186,21 +188,8 @@ Sub CreateShipment()
         End If
     Loop
     
-    
-    
-    
-    
-    
-    
     Call assignBoxSize
-    
-    
-    
-    
     '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''insert check for overweight, if so skip and put error in column a
-    
-    
-    
     
     ' Construct the JSON payload
     Dim jsonPayload As String
@@ -269,8 +258,17 @@ Sub CreateShipment()
     jsonPayload = jsonPayload & """pickupType"": ""USE_SCHEDULED_PICKUP"","
     jsonPayload = jsonPayload & """blockInsightVisibility"": false,"
     jsonPayload = jsonPayload & """shippingChargesPayment"": {"
-    jsonPayload = jsonPayload & """paymentType"": ""SENDER"""
+    
+    jsonPayload = jsonPayload & """paymentType"": ""THIRD_PARTY"","
+    jsonPayload = jsonPayload & """payor"": {"
+    jsonPayload = jsonPayload & """responsibleParty"": {"
+    jsonPayload = jsonPayload & """accountNumber"": {"
+    jsonPayload = jsonPayload & """value"": """ & thirdPartyAccountNumber & """"
+    jsonPayload = jsonPayload & "}"
+    jsonPayload = jsonPayload & "}"
+    jsonPayload = jsonPayload & "}"
     jsonPayload = jsonPayload & "},"
+    
     jsonPayload = jsonPayload & """labelSpecification"": {"
     jsonPayload = jsonPayload & """imageType"": ""PDF"","
     jsonPayload = jsonPayload & """labelStockType"": ""PAPER_85X11_TOP_HALF_LABEL"""
