@@ -35,9 +35,10 @@ Sub Main()
     Set wsMacros = ThisWorkbook.Sheets("BASE BEFORE")
     Call initialize
     Call CheckDateAndSelectFolder
+    Call MakePullSheet
     Call ProcessCSVFiles
     '''''''''''''''''''''''''add logic for sizes other than the typical L M S
-    'need to add pull sheet creator, and auto pdf print
+    'need to add auto pdf print
     'add address validation
 End Sub
 
@@ -749,4 +750,94 @@ Sub boxLoop(startMod As Integer)
             oddQuantity = brakeQuantity Mod startMod
         End If
     End If
+End Sub
+
+Sub MakePullSheet()
+'
+' MakePullSheet Macro
+'
+
+'
+    Sheets("PULL").Activate
+
+    Dim fso As Object
+    Dim strFolder As String, strFile As String, strPath As String
+    Dim objStream As Object
+    Dim strData As String
+    Dim arrData() As String
+    Dim i As Long
+    Dim a As Integer
+    Dim loopNum As Integer
+    
+    loopNum = 1
+    Sheets("PULL").Range("B2:N300").ClearContents
+    a = 2
+    strFolder = ThisWorkbook.Sheets("Sheet1").Range("A1").value
+    
+    ' Set up the file system object
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    
+    ' Loop through all files in the folder
+    strFile = Dir(strFolder & "\*.csv")
+    Do While Len(strFile) > 0
+        strPath = strFolder & "\" & strFile
+        
+        ' Read the file data using a stream
+        Set objStream = CreateObject("ADODB.Stream")
+        objStream.Type = 2 ' Text stream
+        objStream.Charset = "UTF-8"
+        objStream.Open
+        objStream.LoadFromFile strPath
+        strData = objStream.ReadText(-1)
+        objStream.Close
+        Application.Calculation = xlCalculationManual
+        ' Split the data into rows and extract the values we want
+        arrData = Split(strData, vbCrLf)
+        For i = 0 To UBound(arrData)
+            If InStr(1, arrData(i), "ST_NAME", vbTextCompare) > 0 Then
+                If InStr(1, arrData(i), "ST_ADD2", vbTextCompare) > 0 Then
+                
+                    If Len(Split(arrData(3), ",")(3)) = 0 Then
+                        Range("A" & a) = loopNum
+                        Range("B" & a) = Split(arrData(1), ",")(1)
+                        Range("C" & a) = Split(arrData(3), ",")(6)
+                        Range("E" & a) = Split(arrData(3), ",")(2)
+                        Range("G" & a) = Split(arrData(1), ",")(12)
+                        Range("I" & a) = Split(arrData(1), ",")(8)
+                        a = a + 1
+                        loopNum = loopNum + 1
+                    End If
+  
+                End If
+            End If
+        Next i
+        
+        ' Get the next file in the folder
+        strFile = Dir
+    Loop
+    Application.Calculation = xlCalculationAutomatic
+    ActiveWorkbook.Worksheets("PULL").AutoFilter.Sort.SortFields.Clear
+    ActiveWorkbook.Worksheets("PULL").AutoFilter.Sort.SortFields.Add2 Key _
+        :=Range("Q1:Q200"), SortOn:=xlSortOnValues, Order:=xlAscending, _
+        DataOption:=xlSortNormal
+    With ActiveWorkbook.Worksheets("PULL").AutoFilter.Sort
+        .Header = xlYes
+        .MatchCase = False
+        .Orientation = xlTopToBottom
+        .SortMethod = xlPinYin
+        .Apply
+    End With
+    
+    Range("A2") = 1
+    Range("A3") = 2
+    Range("A2:A3").AutoFill Destination:=Range("A2:A301"), Type:=xlFillDefault
+    
+    If loopNum > 1 Then
+        Range("A1:R" & loopNum).PrintOut
+    End If
+    ' Clean up the objects
+    Set objStream = Nothing
+    Set fso = Nothing
+    
+    ThisWorkbook.Sheets("BASE BEFORE").Activate
 End Sub
