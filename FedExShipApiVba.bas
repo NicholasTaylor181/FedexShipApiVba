@@ -37,7 +37,7 @@ Sub Main()
     Call CheckDateAndSelectFolder
     Call ProcessCSVFiles
     '''''''''''''''''''''''''add logic for sizes other than the typical L M S
-    'need to add puerto rico
+    'need to add pull sheet creator, and auto pdf print
     'add address validation
 End Sub
 
@@ -235,18 +235,21 @@ Sub CreateShipment()
     jsonPayload = jsonPayload & "}"
     jsonPayload = jsonPayload & "],"
     jsonPayload = jsonPayload & """shipDatestamp"": """ & Format(Date, "yyyy-mm-dd") & ""","
-    
-    If deliveryMethod = "GROUND" Then
-        jsonPayload = jsonPayload & """serviceType"": ""FEDEX_GROUND"","
-        jsonPayload = jsonPayload & """packagingType"": ""YOUR_PACKAGING"","
+    If isPR Then
+        jsonPayload = jsonPayload & """serviceType"": ""INTERNATIONAL_ECONOMY"","
+        jsonPayload = jsonPayload & """packagingType"": ""FEDEX_BOX"","
+    Else
+        If deliveryMethod = "GROUND" Then
+            jsonPayload = jsonPayload & """serviceType"": ""FEDEX_GROUND"","
+            jsonPayload = jsonPayload & """packagingType"": ""YOUR_PACKAGING"","
         
-    ElseIf deliveryMethod = "STANDARD" Then
-        jsonPayload = jsonPayload & """serviceType"": ""STANDARD_OVERNIGHT"","
-        jsonPayload = jsonPayload & """packagingType"": ""FEDEX_BOX"","
-    
-    ElseIf deliveryMethod = "PRIORITY" Then
-        jsonPayload = jsonPayload & """serviceType"": ""PRIORITY_OVERNIGHT"","
-        jsonPayload = jsonPayload & """packagingType"": ""FEDEX_BOX"","
+        ElseIf deliveryMethod = "STANDARD" Then
+            jsonPayload = jsonPayload & """serviceType"": ""STANDARD_OVERNIGHT"","
+            jsonPayload = jsonPayload & """packagingType"": ""FEDEX_BOX"","
+        
+        ElseIf deliveryMethod = "PRIORITY" Then
+            jsonPayload = jsonPayload & """serviceType"": ""PRIORITY_OVERNIGHT"","
+            jsonPayload = jsonPayload & """packagingType"": ""FEDEX_BOX"","
             If isSD And isFriday Then
                 jsonPayload = jsonPayload & """shipmentSpecialServices"": {"
                 jsonPayload = jsonPayload & """specialServiceTypes"": ["
@@ -254,6 +257,7 @@ Sub CreateShipment()
                 jsonPayload = jsonPayload & "]"
                 jsonPayload = jsonPayload & "},"
             End If
+        End If
     End If
     jsonPayload = jsonPayload & """pickupType"": ""USE_SCHEDULED_PICKUP"","
     jsonPayload = jsonPayload & """blockInsightVisibility"": false,"
@@ -273,6 +277,68 @@ Sub CreateShipment()
     jsonPayload = jsonPayload & """imageType"": ""PDF"","
     jsonPayload = jsonPayload & """labelStockType"": ""PAPER_85X11_TOP_HALF_LABEL"""
     jsonPayload = jsonPayload & "},"
+    
+    
+    If isPR Then
+    
+        jsonPayload = jsonPayload & """customsClearanceDetail"": {"
+        jsonPayload = jsonPayload & """dutiesPayment"": {"
+        jsonPayload = jsonPayload & """paymentType"": ""THIRD_PARTY"","
+        jsonPayload = jsonPayload & """payor"": {"
+        jsonPayload = jsonPayload & """responsibleParty"": {"
+        jsonPayload = jsonPayload & """accountNumber"": {"
+        jsonPayload = jsonPayload & """value"": """ & thirdPartyAccountNumber & """"
+        jsonPayload = jsonPayload & "}"
+        jsonPayload = jsonPayload & "}"
+        jsonPayload = jsonPayload & "}"
+        jsonPayload = jsonPayload & "},"
+        jsonPayload = jsonPayload & """isDocumentOnly"": false,"
+        jsonPayload = jsonPayload & """commodities"": ["
+        jsonPayload = jsonPayload & "{"
+        jsonPayload = jsonPayload & """description"": ""Commercial -  - - BRAKE LININGS AND PADS FRICTION MATERIAL AND ARTICLES THEREOF (FOR EXAMPLE, SHEETS, ROLLS, STRIPS, SEGMENTS, DISCS, WASHERS, PADS), NOT MOUNTED,FOR BRAKES, FOR CLUTCHES OR THE LIKE, WITH A BASIS OF ASBESTOS, OF OTHER MINERAL SUBSTANCES OR OF CELLULOSE, WHETHER OR NOT COMBINED WITH TEXTILE OR OTHER MATERIALS: - NOT CONTAINING ASBESTOS:- - BRAKE LININGS AND PADS"","
+        jsonPayload = jsonPayload & """countryOfManufacture"": ""US"","
+        jsonPayload = jsonPayload & """quantity"": " & brakeQuantity & ","
+        jsonPayload = jsonPayload & """quantityUnits"": ""PCS"","
+        jsonPayload = jsonPayload & """unitPrice"": {"
+        jsonPayload = jsonPayload & """amount"": " & wsMacros.Range("E" & nextRow).value & ","
+        jsonPayload = jsonPayload & """currency"": ""USD"""
+        jsonPayload = jsonPayload & "},"
+        jsonPayload = jsonPayload & """customsValue"": {"
+        jsonPayload = jsonPayload & """amount"": " & wsMacros.Range("E" & nextRow).value * brakeQuantity & ","
+        jsonPayload = jsonPayload & """currency"": ""USD"""
+        jsonPayload = jsonPayload & "},"
+        jsonPayload = jsonPayload & """weight"": {"
+        jsonPayload = jsonPayload & """units"": ""LB"","
+        jsonPayload = jsonPayload & """value"": """ & weight / brakeQuantity & """"
+        jsonPayload = jsonPayload & "}"
+        jsonPayload = jsonPayload & "}"
+        jsonPayload = jsonPayload & "]"
+            
+        jsonPayload = jsonPayload & "},"
+        jsonPayload = jsonPayload & """shippingDocumentSpecification"": {"
+        jsonPayload = jsonPayload & """shippingDocumentTypes"": ["
+        jsonPayload = jsonPayload & """COMMERCIAL_INVOICE"""
+        jsonPayload = jsonPayload & "],"
+        jsonPayload = jsonPayload & """commercialInvoiceDetail"": {"
+        jsonPayload = jsonPayload & """documentFormat"": {"
+        jsonPayload = jsonPayload & """stockType"": ""PAPER_LETTER"","
+        jsonPayload = jsonPayload & """docType"": ""PDF"""
+        jsonPayload = jsonPayload & "}"
+        jsonPayload = jsonPayload & "}"
+        jsonPayload = jsonPayload & "},"
+    
+    
+    
+    End If
+    
+    
+    
+    
+    
+    
+    
+    
+    
     jsonPayload = jsonPayload & """requestedPackageLineItems"": ["
     jsonPayload = jsonPayload & "{"
     
@@ -282,7 +348,7 @@ Sub CreateShipment()
         jsonPayload = jsonPayload & """width"": " & 9 & ","
         jsonPayload = jsonPayload & """height"": " & 5 & ","
         jsonPayload = jsonPayload & """units"": ""IN"""
-            jsonPayload = jsonPayload & "},"
+        jsonPayload = jsonPayload & "},"
     End If
 
     If boxes > 1 Or isOddBox Then
@@ -402,11 +468,14 @@ Sub CreateShipment()
             
             ' Retrieve the label URL from the response
             Dim labelUrl As String
-            
-            If isOddBox Or boxes > 1 Then
-                labelUrl = responseJson("output")("transactionShipments")(1)("shipmentDocuments")(1)("url")
+            If isPR Then
+                labelUrl = responseJson("output")("transactionShipments")(1)("shipmentDocuments")(2)("url")
             Else
-                labelUrl = responseJson("output")("transactionShipments")(1)("pieceResponses")(1)("packageDocuments")(1)("url")
+                If isOddBox Or boxes > 1 Then
+                    labelUrl = responseJson("output")("transactionShipments")(1)("shipmentDocuments")(1)("url")
+                Else
+                    labelUrl = responseJson("output")("transactionShipments")(1)("pieceResponses")(1)("packageDocuments")(1)("url")
+                End If
             End If
             
             ThisWorkbook.Sheets("Sheet1").Range("M2") = labelUrl
