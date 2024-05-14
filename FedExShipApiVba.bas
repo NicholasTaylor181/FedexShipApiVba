@@ -38,7 +38,6 @@ Sub Main()
     Call MakePullSheet
     Call ProcessCSVFiles
     '''''''''''''''''''''''''add logic for sizes other than the typical L M S
-    'need to add auto pdf print
     'add address validation
 End Sub
 
@@ -522,6 +521,10 @@ Sub CreateShipment()
                 ' Close the Stream
                 stream.Close
                 
+                Dim acrobatPath As String
+                
+                acrobatPath = "C:\Program Files\Adobe\Acrobat DC\Acrobat\Acrobat.exe"
+                Shell """" & acrobatPath & """ /N /T """ & labelFilePath & """", vbHide
                 Call VDP_FORMAT
                 attempts = 20
                      
