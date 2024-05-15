@@ -14,7 +14,6 @@ Dim poNumber As String
 Dim trackingNumber As String
 Dim deliveryDate As String
 Dim deliveryMethod As String
-Dim isOverWeight As Boolean
 Dim boxes As Integer
 Dim fedexBox As String
 Dim brakeSize As String
@@ -28,6 +27,8 @@ Dim oddQuantity As Integer
 Dim attempts As Integer
 Dim isShipped As Boolean
 Dim isFriday As Boolean
+Dim isXL As Boolean
+Dim isNoShip As Boolean
 
 Sub Main()
 
@@ -37,7 +38,6 @@ Sub Main()
     Call CheckDateAndSelectFolder
     Call MakePullSheet
     Call ProcessCSVFiles
-    '''''''''''''''''''''''''add logic for sizes other than the typical L M S
     'add address validation
 End Sub
 
@@ -189,100 +189,84 @@ Sub CreateShipment()
     Loop
     
     Call assignBoxSize
-    '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''insert check for overweight, if so skip and put error in column a
     
     ' Construct the JSON payload
-    Dim jsonPayload As String
-
-   
-    jsonPayload = "{"
-    jsonPayload = jsonPayload & """labelResponseOptions"": ""URL_ONLY"","
-    jsonPayload = jsonPayload & """requestedShipment"": {"
-    jsonPayload = jsonPayload & """shipper"": {"
-    jsonPayload = jsonPayload & """contact"": {"
-    jsonPayload = jsonPayload & """personName"": """ & senderName & ""","
-    jsonPayload = jsonPayload & """phoneNumber"": " & senderPhoneNumber & ","
-    jsonPayload = jsonPayload & """companyName"": """ & senderCompanyName & """"
-    jsonPayload = jsonPayload & "},"
-    jsonPayload = jsonPayload & """address"": {"
-    jsonPayload = jsonPayload & """streetLines"": [""" & senderStreetLine1 & """],"
-    jsonPayload = jsonPayload & """city"": """ & senderCity & ""","
-    jsonPayload = jsonPayload & """stateOrProvinceCode"": """ & senderStateCode & ""","
-    jsonPayload = jsonPayload & """postalCode"": " & senderPostalCode & ","
-    jsonPayload = jsonPayload & """countryCode"": """ & senderCountryCode & """"
-    jsonPayload = jsonPayload & "}"
-    jsonPayload = jsonPayload & "},"
-    jsonPayload = jsonPayload & """recipients"": ["
-    jsonPayload = jsonPayload & "{"
-    jsonPayload = jsonPayload & """contact"": {"
-    jsonPayload = jsonPayload & """personName"": """ & recipientName & ""","
-    jsonPayload = jsonPayload & """phoneNumber"": " & recipientPhoneNumber & ","
-    jsonPayload = jsonPayload & """companyName"": """ & recipientCompanyName & """"
-    jsonPayload = jsonPayload & "},"
-    jsonPayload = jsonPayload & """address"": {"
-    
-    If isStreetLine2 Then
-        jsonPayload = jsonPayload & """streetLines"": [""" & recipientStreetLine1 & """,""" & recipientStreetLine2 & """],"
-    Else
-        jsonPayload = jsonPayload & """streetLines"": [""" & recipientStreetLine1 & """],"
+    If weight > 149 Then
+        isNoShip = False
+        wsMacros.Range("A" & nextRow) = "Overweight"
     End If
     
-    jsonPayload = jsonPayload & """city"": """ & recipientCity & ""","
-    jsonPayload = jsonPayload & """stateOrProvinceCode"": """ & recipientStateCode & ""","
-    jsonPayload = jsonPayload & """postalCode"": """ & recipientPostalCode & ""","
-    jsonPayload = jsonPayload & """countryCode"": """ & recipientCountryCode & """"
-    jsonPayload = jsonPayload & "}"
-    jsonPayload = jsonPayload & "}"
-    jsonPayload = jsonPayload & "],"
-    jsonPayload = jsonPayload & """shipDatestamp"": """ & Format(Date, "yyyy-mm-dd") & ""","
-    If isPR Then
-        jsonPayload = jsonPayload & """serviceType"": ""INTERNATIONAL_ECONOMY"","
-        jsonPayload = jsonPayload & """packagingType"": ""FEDEX_BOX"","
-    Else
-        If deliveryMethod = "GROUND" Then
-            jsonPayload = jsonPayload & """serviceType"": ""FEDEX_GROUND"","
-            jsonPayload = jsonPayload & """packagingType"": ""YOUR_PACKAGING"","
+    If Not isNoShip Then
+    
+        Dim jsonPayload As String
+       
+        jsonPayload = "{"
+        jsonPayload = jsonPayload & """labelResponseOptions"": ""URL_ONLY"","
+        jsonPayload = jsonPayload & """requestedShipment"": {"
+        jsonPayload = jsonPayload & """shipper"": {"
+        jsonPayload = jsonPayload & """contact"": {"
+        jsonPayload = jsonPayload & """personName"": """ & senderName & ""","
+        jsonPayload = jsonPayload & """phoneNumber"": " & senderPhoneNumber & ","
+        jsonPayload = jsonPayload & """companyName"": """ & senderCompanyName & """"
+        jsonPayload = jsonPayload & "},"
+        jsonPayload = jsonPayload & """address"": {"
+        jsonPayload = jsonPayload & """streetLines"": [""" & senderStreetLine1 & """],"
+        jsonPayload = jsonPayload & """city"": """ & senderCity & ""","
+        jsonPayload = jsonPayload & """stateOrProvinceCode"": """ & senderStateCode & ""","
+        jsonPayload = jsonPayload & """postalCode"": " & senderPostalCode & ","
+        jsonPayload = jsonPayload & """countryCode"": """ & senderCountryCode & """"
+        jsonPayload = jsonPayload & "}"
+        jsonPayload = jsonPayload & "},"
+        jsonPayload = jsonPayload & """recipients"": ["
+        jsonPayload = jsonPayload & "{"
+        jsonPayload = jsonPayload & """contact"": {"
+        jsonPayload = jsonPayload & """personName"": """ & recipientName & ""","
+        jsonPayload = jsonPayload & """phoneNumber"": " & recipientPhoneNumber & ","
+        jsonPayload = jsonPayload & """companyName"": """ & recipientCompanyName & """"
+        jsonPayload = jsonPayload & "},"
+        jsonPayload = jsonPayload & """address"": {"
         
-        ElseIf deliveryMethod = "STANDARD" Then
-            jsonPayload = jsonPayload & """serviceType"": ""STANDARD_OVERNIGHT"","
-            jsonPayload = jsonPayload & """packagingType"": ""FEDEX_BOX"","
+        If isStreetLine2 Then
+            jsonPayload = jsonPayload & """streetLines"": [""" & recipientStreetLine1 & """,""" & recipientStreetLine2 & """],"
+        Else
+            jsonPayload = jsonPayload & """streetLines"": [""" & recipientStreetLine1 & """],"
+        End If
         
-        ElseIf deliveryMethod = "PRIORITY" Then
-            jsonPayload = jsonPayload & """serviceType"": ""PRIORITY_OVERNIGHT"","
+        jsonPayload = jsonPayload & """city"": """ & recipientCity & ""","
+        jsonPayload = jsonPayload & """stateOrProvinceCode"": """ & recipientStateCode & ""","
+        jsonPayload = jsonPayload & """postalCode"": """ & recipientPostalCode & ""","
+        jsonPayload = jsonPayload & """countryCode"": """ & recipientCountryCode & """"
+        jsonPayload = jsonPayload & "}"
+        jsonPayload = jsonPayload & "}"
+        jsonPayload = jsonPayload & "],"
+        jsonPayload = jsonPayload & """shipDatestamp"": """ & Format(Date, "yyyy-mm-dd") & ""","
+        If isPR Then
+            jsonPayload = jsonPayload & """serviceType"": ""INTERNATIONAL_ECONOMY"","
             jsonPayload = jsonPayload & """packagingType"": ""FEDEX_BOX"","
-            If isSD And isFriday Then
-                jsonPayload = jsonPayload & """shipmentSpecialServices"": {"
-                jsonPayload = jsonPayload & """specialServiceTypes"": ["
-                jsonPayload = jsonPayload & """SATURDAY_DELIVERY"""
-                jsonPayload = jsonPayload & "]"
-                jsonPayload = jsonPayload & "},"
+        Else
+            If deliveryMethod = "GROUND" Then
+                jsonPayload = jsonPayload & """serviceType"": ""FEDEX_GROUND"","
+                jsonPayload = jsonPayload & """packagingType"": ""YOUR_PACKAGING"","
+            
+            ElseIf deliveryMethod = "STANDARD" Then
+                jsonPayload = jsonPayload & """serviceType"": ""STANDARD_OVERNIGHT"","
+                jsonPayload = jsonPayload & """packagingType"": ""FEDEX_BOX"","
+            
+            ElseIf deliveryMethod = "PRIORITY" Then
+                jsonPayload = jsonPayload & """serviceType"": ""PRIORITY_OVERNIGHT"","
+                jsonPayload = jsonPayload & """packagingType"": ""FEDEX_BOX"","
+                If isSD And isFriday Then
+                    jsonPayload = jsonPayload & """shipmentSpecialServices"": {"
+                    jsonPayload = jsonPayload & """specialServiceTypes"": ["
+                    jsonPayload = jsonPayload & """SATURDAY_DELIVERY"""
+                    jsonPayload = jsonPayload & "]"
+                    jsonPayload = jsonPayload & "},"
+                End If
             End If
         End If
-    End If
-    jsonPayload = jsonPayload & """pickupType"": ""USE_SCHEDULED_PICKUP"","
-    jsonPayload = jsonPayload & """blockInsightVisibility"": false,"
-    jsonPayload = jsonPayload & """shippingChargesPayment"": {"
-    
-    jsonPayload = jsonPayload & """paymentType"": ""THIRD_PARTY"","
-    jsonPayload = jsonPayload & """payor"": {"
-    jsonPayload = jsonPayload & """responsibleParty"": {"
-    jsonPayload = jsonPayload & """accountNumber"": {"
-    jsonPayload = jsonPayload & """value"": """ & thirdPartyAccountNumber & """"
-    jsonPayload = jsonPayload & "}"
-    jsonPayload = jsonPayload & "}"
-    jsonPayload = jsonPayload & "}"
-    jsonPayload = jsonPayload & "},"
-    
-    jsonPayload = jsonPayload & """labelSpecification"": {"
-    jsonPayload = jsonPayload & """imageType"": ""PDF"","
-    jsonPayload = jsonPayload & """labelStockType"": ""PAPER_85X11_TOP_HALF_LABEL"""
-    jsonPayload = jsonPayload & "},"
-    
-    
-    If isPR Then
-    
-        jsonPayload = jsonPayload & """customsClearanceDetail"": {"
-        jsonPayload = jsonPayload & """dutiesPayment"": {"
+        jsonPayload = jsonPayload & """pickupType"": ""USE_SCHEDULED_PICKUP"","
+        jsonPayload = jsonPayload & """blockInsightVisibility"": false,"
+        jsonPayload = jsonPayload & """shippingChargesPayment"": {"
         jsonPayload = jsonPayload & """paymentType"": ""THIRD_PARTY"","
         jsonPayload = jsonPayload & """payor"": {"
         jsonPayload = jsonPayload & """responsibleParty"": {"
@@ -292,100 +276,93 @@ Sub CreateShipment()
         jsonPayload = jsonPayload & "}"
         jsonPayload = jsonPayload & "}"
         jsonPayload = jsonPayload & "},"
-        jsonPayload = jsonPayload & """isDocumentOnly"": false,"
-        jsonPayload = jsonPayload & """commodities"": ["
-        jsonPayload = jsonPayload & "{"
-        jsonPayload = jsonPayload & """description"": ""Commercial -  - - BRAKE LININGS AND PADS FRICTION MATERIAL AND ARTICLES THEREOF (FOR EXAMPLE, SHEETS, ROLLS, STRIPS, SEGMENTS, DISCS, WASHERS, PADS), NOT MOUNTED,FOR BRAKES, FOR CLUTCHES OR THE LIKE, WITH A BASIS OF ASBESTOS, OF OTHER MINERAL SUBSTANCES OR OF CELLULOSE, WHETHER OR NOT COMBINED WITH TEXTILE OR OTHER MATERIALS: - NOT CONTAINING ASBESTOS:- - BRAKE LININGS AND PADS"","
-        jsonPayload = jsonPayload & """countryOfManufacture"": ""US"","
-        jsonPayload = jsonPayload & """quantity"": " & brakeQuantity & ","
-        jsonPayload = jsonPayload & """quantityUnits"": ""PCS"","
-        jsonPayload = jsonPayload & """unitPrice"": {"
-        jsonPayload = jsonPayload & """amount"": " & wsMacros.Range("E" & nextRow).value & ","
-        jsonPayload = jsonPayload & """currency"": ""USD"""
+        jsonPayload = jsonPayload & """labelSpecification"": {"
+        jsonPayload = jsonPayload & """imageType"": ""PDF"","
+        jsonPayload = jsonPayload & """labelStockType"": ""PAPER_85X11_TOP_HALF_LABEL"""
         jsonPayload = jsonPayload & "},"
-        jsonPayload = jsonPayload & """customsValue"": {"
-        jsonPayload = jsonPayload & """amount"": " & wsMacros.Range("E" & nextRow).value * brakeQuantity & ","
-        jsonPayload = jsonPayload & """currency"": ""USD"""
-        jsonPayload = jsonPayload & "},"
-        jsonPayload = jsonPayload & """weight"": {"
-        jsonPayload = jsonPayload & """units"": ""LB"","
-        jsonPayload = jsonPayload & """value"": """ & weight / brakeQuantity & """"
-        jsonPayload = jsonPayload & "}"
-        jsonPayload = jsonPayload & "}"
-        jsonPayload = jsonPayload & "]"
-            
-        jsonPayload = jsonPayload & "},"
-        jsonPayload = jsonPayload & """shippingDocumentSpecification"": {"
-        jsonPayload = jsonPayload & """shippingDocumentTypes"": ["
-        jsonPayload = jsonPayload & """COMMERCIAL_INVOICE"""
-        jsonPayload = jsonPayload & "],"
-        jsonPayload = jsonPayload & """commercialInvoiceDetail"": {"
-        jsonPayload = jsonPayload & """documentFormat"": {"
-        jsonPayload = jsonPayload & """stockType"": ""PAPER_LETTER"","
-        jsonPayload = jsonPayload & """docType"": ""PDF"""
-        jsonPayload = jsonPayload & "}"
-        jsonPayload = jsonPayload & "}"
-        jsonPayload = jsonPayload & "},"
-    
-    
-    
-    End If
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    jsonPayload = jsonPayload & """requestedPackageLineItems"": ["
-    jsonPayload = jsonPayload & "{"
-    
-    If deliveryMethod = "GROUND" And boxes = 1 And Not isOddBox Then
-        jsonPayload = jsonPayload & """Dimensions"": {"
-        jsonPayload = jsonPayload & """length"": " & 12 & ","
-        jsonPayload = jsonPayload & """width"": " & 9 & ","
-        jsonPayload = jsonPayload & """height"": " & 5 & ","
-        jsonPayload = jsonPayload & """units"": ""IN"""
-        jsonPayload = jsonPayload & "},"
-    End If
-
-    If boxes > 1 Or isOddBox Then
-            jsonPayload = jsonPayload & """groupPackageCount"": " & boxes & ","
+        
+        If isPR Then
+            jsonPayload = jsonPayload & """customsClearanceDetail"": {"
+            jsonPayload = jsonPayload & """dutiesPayment"": {"
+            jsonPayload = jsonPayload & """paymentType"": ""THIRD_PARTY"","
+            jsonPayload = jsonPayload & """payor"": {"
+            jsonPayload = jsonPayload & """responsibleParty"": {"
+            jsonPayload = jsonPayload & """accountNumber"": {"
+            jsonPayload = jsonPayload & """value"": """ & thirdPartyAccountNumber & """"
+            jsonPayload = jsonPayload & "}"
+            jsonPayload = jsonPayload & "}"
+            jsonPayload = jsonPayload & "}"
+            jsonPayload = jsonPayload & "},"
+            jsonPayload = jsonPayload & """isDocumentOnly"": false,"
+            jsonPayload = jsonPayload & """commodities"": ["
+            jsonPayload = jsonPayload & "{"
+            jsonPayload = jsonPayload & """description"": ""Commercial -  - - BRAKE LININGS AND PADS FRICTION MATERIAL AND ARTICLES THEREOF (FOR EXAMPLE, SHEETS, ROLLS, STRIPS, SEGMENTS, DISCS, WASHERS, PADS), NOT MOUNTED,FOR BRAKES, FOR CLUTCHES OR THE LIKE, WITH A BASIS OF ASBESTOS, OF OTHER MINERAL SUBSTANCES OR OF CELLULOSE, WHETHER OR NOT COMBINED WITH TEXTILE OR OTHER MATERIALS: - NOT CONTAINING ASBESTOS:- - BRAKE LININGS AND PADS"","
+            jsonPayload = jsonPayload & """countryOfManufacture"": ""US"","
+            jsonPayload = jsonPayload & """quantity"": " & brakeQuantity & ","
+            jsonPayload = jsonPayload & """quantityUnits"": ""PCS"","
+            jsonPayload = jsonPayload & """unitPrice"": {"
+            jsonPayload = jsonPayload & """amount"": " & wsMacros.Range("E" & nextRow).value & ","
+            jsonPayload = jsonPayload & """currency"": ""USD"""
+            jsonPayload = jsonPayload & "},"
+            jsonPayload = jsonPayload & """customsValue"": {"
+            jsonPayload = jsonPayload & """amount"": " & wsMacros.Range("E" & nextRow).value * brakeQuantity & ","
+            jsonPayload = jsonPayload & """currency"": ""USD"""
+            jsonPayload = jsonPayload & "},"
             jsonPayload = jsonPayload & """weight"": {"
-            jsonPayload = jsonPayload & """value"": " & weightPerBox & ","
-            jsonPayload = jsonPayload & """units"": ""LB"""
-            jsonPayload = jsonPayload & "},"
-            
-            If deliveryMethod = "GROUND" Then
-                jsonPayload = jsonPayload & """Dimensions"": {"
-                jsonPayload = jsonPayload & """length"": " & 12 & ","
-                jsonPayload = jsonPayload & """width"": " & 9 & ","
-                jsonPayload = jsonPayload & """height"": " & 5 & ","
-                jsonPayload = jsonPayload & """units"": ""IN"""
-                jsonPayload = jsonPayload & "},"
-            End If
-            jsonPayload = jsonPayload & """customerReferences"": ["
-            jsonPayload = jsonPayload & "{"
-            jsonPayload = jsonPayload & """customerReferenceType"": ""P_O_NUMBER"","
-            jsonPayload = jsonPayload & """value"": """ & invoiceNo & """"
-            jsonPayload = jsonPayload & "},"
-            jsonPayload = jsonPayload & "{"
-            jsonPayload = jsonPayload & """customerReferenceType"": ""CUSTOMER_REFERENCE"","
-            jsonPayload = jsonPayload & """value"": """ & wsMacros.Range("D" & nextRow).value & "-" & shipQuantity & """"
+            jsonPayload = jsonPayload & """units"": ""LB"","
+            jsonPayload = jsonPayload & """value"": """ & weight / brakeQuantity & """"
+            jsonPayload = jsonPayload & "}"
             jsonPayload = jsonPayload & "}"
             jsonPayload = jsonPayload & "]"
-            If isOddBox Then
-                jsonPayload = jsonPayload & "},"
-                jsonPayload = jsonPayload & "{"
-                jsonPayload = jsonPayload & """groupPackageCount"": " & 1 & ","
+            jsonPayload = jsonPayload & "},"
+            jsonPayload = jsonPayload & """shippingDocumentSpecification"": {"
+            jsonPayload = jsonPayload & """shippingDocumentTypes"": ["
+            jsonPayload = jsonPayload & """COMMERCIAL_INVOICE"""
+            jsonPayload = jsonPayload & "],"
+            jsonPayload = jsonPayload & """commercialInvoiceDetail"": {"
+            jsonPayload = jsonPayload & """documentFormat"": {"
+            jsonPayload = jsonPayload & """stockType"": ""PAPER_LETTER"","
+            jsonPayload = jsonPayload & """docType"": ""PDF"""
+            jsonPayload = jsonPayload & "}"
+            jsonPayload = jsonPayload & "}"
+            jsonPayload = jsonPayload & "},"
+        End If
+        
+        jsonPayload = jsonPayload & """requestedPackageLineItems"": ["
+        jsonPayload = jsonPayload & "{"
+        
+        If deliveryMethod = "GROUND" And isXL And boxes = 1 And Not isOddBox Then
+            jsonPayload = jsonPayload & """Dimensions"": {"
+            jsonPayload = jsonPayload & """length"": " & 12 & ","
+            jsonPayload = jsonPayload & """width"": " & 12 & ","
+            jsonPayload = jsonPayload & """height"": " & 6 & ","
+            jsonPayload = jsonPayload & """units"": ""IN"""
+            jsonPayload = jsonPayload & "},"
+        
+        ElseIf deliveryMethod = "GROUND" And boxes = 1 And Not isOddBox Then
+            jsonPayload = jsonPayload & """Dimensions"": {"
+            jsonPayload = jsonPayload & """length"": " & 12 & ","
+            jsonPayload = jsonPayload & """width"": " & 9 & ","
+            jsonPayload = jsonPayload & """height"": " & 5 & ","
+            jsonPayload = jsonPayload & """units"": ""IN"""
+            jsonPayload = jsonPayload & "},"
+        End If
+    
+        If boxes > 1 Or isOddBox Then
+                jsonPayload = jsonPayload & """groupPackageCount"": " & boxes & ","
                 jsonPayload = jsonPayload & """weight"": {"
-                jsonPayload = jsonPayload & """value"": " & oddBoxWeight & ","
+                jsonPayload = jsonPayload & """value"": " & weightPerBox & ","
                 jsonPayload = jsonPayload & """units"": ""LB"""
                 jsonPayload = jsonPayload & "},"
-            
-                If deliveryMethod = "GROUND" Then
+                
+                If deliveryMethod = "GROUND" And isXL Then
+                    jsonPayload = jsonPayload & """Dimensions"": {"
+                    jsonPayload = jsonPayload & """length"": " & 12 & ","
+                    jsonPayload = jsonPayload & """width"": " & 12 & ","
+                    jsonPayload = jsonPayload & """height"": " & 6 & ","
+                    jsonPayload = jsonPayload & """units"": ""IN"""
+                    jsonPayload = jsonPayload & "},"
+                ElseIf deliveryMethod = "GROUND" Then
                     jsonPayload = jsonPayload & """Dimensions"": {"
                     jsonPayload = jsonPayload & """length"": " & 12 & ","
                     jsonPayload = jsonPayload & """width"": " & 9 & ","
@@ -393,7 +370,6 @@ Sub CreateShipment()
                     jsonPayload = jsonPayload & """units"": ""IN"""
                     jsonPayload = jsonPayload & "},"
                 End If
-
                 jsonPayload = jsonPayload & """customerReferences"": ["
                 jsonPayload = jsonPayload & "{"
                 jsonPayload = jsonPayload & """customerReferenceType"": ""P_O_NUMBER"","
@@ -401,143 +377,177 @@ Sub CreateShipment()
                 jsonPayload = jsonPayload & "},"
                 jsonPayload = jsonPayload & "{"
                 jsonPayload = jsonPayload & """customerReferenceType"": ""CUSTOMER_REFERENCE"","
-                jsonPayload = jsonPayload & """value"": """ & wsMacros.Range("D" & nextRow).value & "-" & oddQuantity & """"
+                jsonPayload = jsonPayload & """value"": """ & wsMacros.Range("D" & nextRow).value & "-" & shipQuantity & """"
                 jsonPayload = jsonPayload & "}"
                 jsonPayload = jsonPayload & "]"
-                jsonPayload = jsonPayload & "}"
-            
-            Else
-                jsonPayload = jsonPayload & "}"
-        
-            End If
-    
-    
-    
-    
-    
-
-    Else
-        jsonPayload = jsonPayload & """customerReferences"": ["
-        jsonPayload = jsonPayload & "{"
-        jsonPayload = jsonPayload & """customerReferenceType"": ""P_O_NUMBER"","
-        jsonPayload = jsonPayload & """value"": """ & invoiceNo & """"
-        jsonPayload = jsonPayload & "},"
-        jsonPayload = jsonPayload & "{"
-        jsonPayload = jsonPayload & """customerReferenceType"": ""CUSTOMER_REFERENCE"","
-        jsonPayload = jsonPayload & """value"": """ & wsMacros.Range("M" & nextRow).value & """"
-        jsonPayload = jsonPayload & "}"
-        jsonPayload = jsonPayload & "],"
-        jsonPayload = jsonPayload & """weight"": {"
-        jsonPayload = jsonPayload & """value"": " & weight & ","
-        jsonPayload = jsonPayload & """units"": ""LB"""
-        jsonPayload = jsonPayload & "}"
-        jsonPayload = jsonPayload & "}"
-    End If
-    jsonPayload = jsonPayload & "]"
-    jsonPayload = jsonPayload & "},"
-    jsonPayload = jsonPayload & """accountNumber"": {"
-    jsonPayload = jsonPayload & """value"": """ & accountNumber & """"
-    jsonPayload = jsonPayload & "}"
-    jsonPayload = jsonPayload & "}"
-   
-   wsMacros.Range("AP" & nextRow) = jsonPayload
-   isShipped = False
-   attempts = 0
-   
-   Do While attempts < 3
-        wsMacros.Range("AQ" & nextRow) = attempts
-       
-        ' Make the API request
-        Dim url As String
-        url = "https://apis-sandbox.fedex.com/ship/v1/shipments"
-    
-        Dim http As Object
-        Set http = CreateObject("WinHttp.WinHttpRequest.5.1")
-        http.Open "POST", url, False
-        http.SetRequestHeader "Authorization", "Bearer " & accessToken
-        http.SetRequestHeader "Content-Type", "application/json"
-        http.Send jsonPayload
-    
-        ' Check if the request was successful
-            wsMacros.Range("A" & nextRow) = http.Status
-        If http.Status = 200 Then
-            Dim responseJson As Object
-            Set responseJson = JsonConverter.ParseJson(http.responseText)
-            trackingNumber = responseJson("output")("transactionShipments")(1)("masterTrackingNumber")
-            deliveryDate = responseJson("output")("transactionShipments")(1)("pieceResponses")(1)("deliveryDatestamp")
-            
-            ' Retrieve the label URL from the response
-            Dim labelUrl As String
-            If isPR Then
-                labelUrl = responseJson("output")("transactionShipments")(1)("shipmentDocuments")(2)("url")
-            Else
-                If isOddBox Or boxes > 1 Then
-                    labelUrl = responseJson("output")("transactionShipments")(1)("shipmentDocuments")(1)("url")
-                Else
-                    labelUrl = responseJson("output")("transactionShipments")(1)("pieceResponses")(1)("packageDocuments")(1)("url")
+                If isOddBox Then
+                    jsonPayload = jsonPayload & "},"
+                    jsonPayload = jsonPayload & "{"
+                    jsonPayload = jsonPayload & """groupPackageCount"": " & 1 & ","
+                    jsonPayload = jsonPayload & """weight"": {"
+                    jsonPayload = jsonPayload & """value"": " & oddBoxWeight & ","
+                    jsonPayload = jsonPayload & """units"": ""LB"""
+                    jsonPayload = jsonPayload & "},"
+                
+                If deliveryMethod = "GROUND" And isXL Then
+                    jsonPayload = jsonPayload & """Dimensions"": {"
+                    jsonPayload = jsonPayload & """length"": " & 12 & ","
+                    jsonPayload = jsonPayload & """width"": " & 12 & ","
+                    jsonPayload = jsonPayload & """height"": " & 6 & ","
+                    jsonPayload = jsonPayload & """units"": ""IN"""
+                    jsonPayload = jsonPayload & "},"
+                ElseIf deliveryMethod = "GROUND" Then
+                    jsonPayload = jsonPayload & """Dimensions"": {"
+                    jsonPayload = jsonPayload & """length"": " & 12 & ","
+                    jsonPayload = jsonPayload & """width"": " & 9 & ","
+                    jsonPayload = jsonPayload & """height"": " & 5 & ","
+                    jsonPayload = jsonPayload & """units"": ""IN"""
+                    jsonPayload = jsonPayload & "},"
                 End If
-            End If
-            
-            ThisWorkbook.Sheets("Sheet1").Range("M2") = labelUrl
-            deliveryDate = Left(deliveryDate, 4) & Mid(deliveryDate, 6, 2) & Right(deliveryDate, 2)
-            
-            ' Download and save the label as PDF
-            Dim labelFilePath As String
-            labelFilePath = folderPath & poNumber & ".pdf"
     
-            Dim labelHttp As Object
-            Dim labelFile As Object
-            Dim xmlHTTP As Object
-    
-            ' Create a new XMLHTTP object
-            Set xmlHTTP = CreateObject("MSXML2.XMLHTTP")
+                    jsonPayload = jsonPayload & """customerReferences"": ["
+                    jsonPayload = jsonPayload & "{"
+                    jsonPayload = jsonPayload & """customerReferenceType"": ""P_O_NUMBER"","
+                    jsonPayload = jsonPayload & """value"": """ & invoiceNo & """"
+                    jsonPayload = jsonPayload & "},"
+                    jsonPayload = jsonPayload & "{"
+                    jsonPayload = jsonPayload & """customerReferenceType"": ""CUSTOMER_REFERENCE"","
+                    jsonPayload = jsonPayload & """value"": """ & wsMacros.Range("D" & nextRow).value & "-" & oddQuantity & """"
+                    jsonPayload = jsonPayload & "}"
+                    jsonPayload = jsonPayload & "]"
+                    jsonPayload = jsonPayload & "}"
+                Else
+                    jsonPayload = jsonPayload & "}"
+            
+                End If
+        Else
+            jsonPayload = jsonPayload & """customerReferences"": ["
+            jsonPayload = jsonPayload & "{"
+            jsonPayload = jsonPayload & """customerReferenceType"": ""P_O_NUMBER"","
+            jsonPayload = jsonPayload & """value"": """ & invoiceNo & """"
+            jsonPayload = jsonPayload & "},"
+            jsonPayload = jsonPayload & "{"
+            jsonPayload = jsonPayload & """customerReferenceType"": ""CUSTOMER_REFERENCE"","
+            jsonPayload = jsonPayload & """value"": """ & wsMacros.Range("M" & nextRow).value & """"
+            jsonPayload = jsonPayload & "}"
+            jsonPayload = jsonPayload & "],"
+            jsonPayload = jsonPayload & """weight"": {"
+            jsonPayload = jsonPayload & """value"": " & weight & ","
+            jsonPayload = jsonPayload & """units"": ""LB"""
+            jsonPayload = jsonPayload & "}"
+            jsonPayload = jsonPayload & "}"
+        End If
+        jsonPayload = jsonPayload & "]"
+        jsonPayload = jsonPayload & "},"
+        jsonPayload = jsonPayload & """accountNumber"": {"
+        jsonPayload = jsonPayload & """value"": """ & accountNumber & """"
+        jsonPayload = jsonPayload & "}"
+        jsonPayload = jsonPayload & "}"
+       
+       wsMacros.Range("AP" & nextRow) = jsonPayload
+       isShipped = False
+       attempts = 0
+       
+       Do While attempts < 3
+            wsMacros.Range("AQ" & nextRow) = attempts
+           
+            ' Make the API request
+            Dim url As String
+            url = "https://apis-sandbox.fedex.com/ship/v1/shipments"
         
-            ' Open the URL
-            xmlHTTP.Open "GET", labelUrl, False
-        
-            ' Send the request
-            xmlHTTP.Send
-            Dim stream As Object
+            Dim http As Object
+            Set http = CreateObject("WinHttp.WinHttpRequest.5.1")
+            http.Open "POST", url, False
+            http.SetRequestHeader "Authorization", "Bearer " & accessToken
+            http.SetRequestHeader "Content-Type", "application/json"
+            http.Send jsonPayload
         
             ' Check if the request was successful
-    
-            If xmlHTTP.Status = 200 Then
-                ' Create a new FileStream object to write the PDF content
-            
-            
-                ' Create a new Stream object to write the PDF content
-                Set stream = CreateObject("ADODB.Stream")
-        
-                ' Set stream properties
-                stream.Type = 1 ' adTypeBinary
-                stream.Open
-        
-                ' Write the response content (PDF) to the Stream
-                stream.Write xmlHTTP.ResponseBody
-        
-                ' Save the Stream to a file
-                stream.SaveToFile labelFilePath, 2 ' adSaveCreateOverWrite
-        
-                ' Close the Stream
-                stream.Close
+                wsMacros.Range("A" & nextRow) = http.Status
+            If http.Status = 200 Then
+                Dim responseJson As Object
+                Set responseJson = JsonConverter.ParseJson(http.responseText)
+                trackingNumber = responseJson("output")("transactionShipments")(1)("masterTrackingNumber")
+                deliveryDate = responseJson("output")("transactionShipments")(1)("pieceResponses")(1)("deliveryDatestamp")
                 
-                Dim acrobatPath As String
+                ' Retrieve the label URL from the response
+                Dim labelUrl As String
+                If isPR Then
+                    labelUrl = responseJson("output")("transactionShipments")(1)("shipmentDocuments")(2)("url")
+                Else
+                    If isOddBox Or boxes > 1 Then
+                        labelUrl = responseJson("output")("transactionShipments")(1)("shipmentDocuments")(1)("url")
+                    Else
+                        labelUrl = responseJson("output")("transactionShipments")(1)("pieceResponses")(1)("packageDocuments")(1)("url")
+                    End If
+                End If
                 
-                acrobatPath = "C:\Program Files\Adobe\Acrobat DC\Acrobat\Acrobat.exe"
-                Shell """" & acrobatPath & """ /N /T """ & labelFilePath & """", vbHide
-                Call VDP_FORMAT
-                attempts = 20
-                     
+                ThisWorkbook.Sheets("Sheet1").Range("M2") = labelUrl
+                deliveryDate = Left(deliveryDate, 4) & Mid(deliveryDate, 6, 2) & Right(deliveryDate, 2)
+                
+                ' Download and save the label as PDF
+                Dim labelFilePath As String
+                labelFilePath = folderPath & poNumber & ".pdf"
+        
+                Dim labelHttp As Object
+                Dim labelFile As Object
+                Dim xmlHTTP As Object
+        
+                ' Create a new XMLHTTP object
+                Set xmlHTTP = CreateObject("MSXML2.XMLHTTP")
+            
+                ' Open the URL
+                xmlHTTP.Open "GET", labelUrl, False
+            
+                ' Send the request
+                xmlHTTP.Send
+                Dim stream As Object
+            
+                ' Check if the request was successful
+        
+                If xmlHTTP.Status = 200 Then
+                    ' Create a new FileStream object to write the PDF content
+                
+                    ' Create a new Stream object to write the PDF content
+                    Set stream = CreateObject("ADODB.Stream")
+            
+                    ' Set stream properties
+                    stream.Type = 1 ' adTypeBinary
+                    stream.Open
+            
+                    ' Write the response content (PDF) to the Stream
+                    stream.Write xmlHTTP.ResponseBody
+            
+                    ' Save the Stream to a file
+                    stream.SaveToFile labelFilePath, 2 ' adSaveCreateOverWrite
+            
+                    ' Close the Stream
+                    stream.Close
+                    
+                    Dim acrobatPath As String
+                    
+                    acrobatPath = "C:\Program Files\Adobe\Acrobat DC\Acrobat\Acrobat.exe"
+                    
+            '        Shell "C:\Program Files\Adobe\Acrobat DC\Acrobat\Acrobat.exe /p /h /s " & Chr(34) & labelFilePath & Chr(34), vbHide
+     '       Shell "C:\Program Files\Adobe\Acrobat DC\Acrobat\Acrobat.exe /t " & Chr(34) & labelFilePath & Chr(34) & " " & Chr(34) & "Microsoft Print to PDF" & Chr(34), vbHide
+    '                Shell "C:\Program Files\Adobe\Acrobat DC\Acrobat\Acrobat.exe /t " & Chr(34) & labelFilePath & Chr(34), vbHide
+                    Shell """" & acrobatPath & """ /N /T """ & labelFilePath & """", vbHide
+                    Call VDP_FORMAT
+                    attempts = 20
+                         
+                Else
+                    attempts = attempts + 1
+                End If
             Else
                 attempts = attempts + 1
             End If
-        Else
-            attempts = attempts + 1
-        End If
-
-    Loop
     
-        Set xmlHTTP = Nothing
+        Loop
+        
+            Set xmlHTTP = Nothing
+    Else
+    wsMacros.Range("A" & nextRow) = "Invalid size"
+    End If
 End Sub
 
 Private Function GetAccessToken(apiKey As String, apiPassword As String) As String
@@ -688,9 +698,13 @@ End Sub
 
 Sub assignBoxSize()
     isOddBox = False
-        
+    isXL = False
+    isNoShip = False
     If fedexBox = "GROUND" Then
-        If brakeSize = "L" Then
+        If brakeSize = "XL" Then
+            isXL = True
+            boxLoop (2)
+        ElseIf brakeSize = "L" Or brakeSize = "GL" Or brakeSize = "S1" Or brakeSize = "M2" Then
             If brakeQuantity = 1 Then
                 boxes = 1
                 weightPerBox = weight
@@ -699,23 +713,36 @@ Sub assignBoxSize()
                 weightPerBox = weight / brakeQuantity
                 shipQuantity = 1
             End If
-        ElseIf brakeSize = "M" Then
+        ElseIf brakeSize = "M" Or brakeSize = "GS" Then
             boxLoop (3)
         ElseIf brakeSize = "S" Then
           boxLoop (5)
+        ElseIf brakeSize = "GM" Then
+            boxLoop (2)
         End If
+        isNoShip = True
     Else
-        If brakeSize = "L" Then
+        If brakeSize = "L" Or brakeSize = "XL" Or brakeSize = "GL" Then
             boxLoop (2)
         ElseIf brakeSize = "M" Then
             boxLoop (4)
-        ElseIf brakeSize = "S" Then
+        ElseIf brakeSize = "S" Or brakeSize = "GS" Then
             boxLoop (8)
+        ElseIf brakeSize = "GM" Then
+            boxLoop (2)
+        ElseIf brakeSize = "S1" Or brakeSize = "M2" Then
+            If brakeQuantity = 1 Then
+                boxes = 1
+                weightPerBox = weight
+            Else
+                boxes = brakeQuantity
+                weightPerBox = weight / brakeQuantity
+                shipQuantity = 1
+            End If
+            isNoShip = True
         End If
     End If
 End Sub
-
-
 Sub modWeight(modQuantity As Integer)
     boxes = (brakeQuantity - brakeQuantity Mod modQuantity) / modQuantity
     weightPerBox = (weight / brakeQuantity) * modQuantity
@@ -756,11 +783,7 @@ Sub boxLoop(startMod As Integer)
 End Sub
 
 Sub MakePullSheet()
-'
-' MakePullSheet Macro
-'
 
-'
     Sheets("PULL").Activate
 
     Dim fso As Object
