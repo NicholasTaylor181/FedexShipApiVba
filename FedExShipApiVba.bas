@@ -54,6 +54,7 @@ Sub initialize()
     ' Check if access token is retrieved successfully
     If accessToken = "" Then
         MsgBox "Failed to retrieve access token."
+        End
         Exit Sub
     End If
     
@@ -372,11 +373,13 @@ Sub CreateShipment()
                 End If
                 jsonPayload = jsonPayload & """customerReferences"": ["
                 jsonPayload = jsonPayload & "{"
-                jsonPayload = jsonPayload & """customerReferenceType"": ""P_O_NUMBER"","
+'                jsonPayload = jsonPayload & """customerReferenceType"": ""P_O_NUMBER"","
+                jsonPayload = jsonPayload & """customerReferenceType"": ""CUSTOMER_REFERENCE"","
                 jsonPayload = jsonPayload & """value"": """ & invoiceNo & """"
                 jsonPayload = jsonPayload & "},"
                 jsonPayload = jsonPayload & "{"
-                jsonPayload = jsonPayload & """customerReferenceType"": ""CUSTOMER_REFERENCE"","
+'                jsonPayload = jsonPayload & """customerReferenceType"": ""CUSTOMER_REFERENCE"","
+                jsonPayload = jsonPayload & """customerReferenceType"": ""P_O_NUMBER"","
                 jsonPayload = jsonPayload & """value"": """ & wsMacros.Range("D" & nextRow).value & "-" & shipQuantity & """"
                 jsonPayload = jsonPayload & "}"
                 jsonPayload = jsonPayload & "]"
@@ -407,11 +410,13 @@ Sub CreateShipment()
     
                     jsonPayload = jsonPayload & """customerReferences"": ["
                     jsonPayload = jsonPayload & "{"
-                    jsonPayload = jsonPayload & """customerReferenceType"": ""P_O_NUMBER"","
+                    'jsonPayload = jsonPayload & """customerReferenceType"": ""P_O_NUMBER"","
+                    jsonPayload = jsonPayload & """customerReferenceType"": ""CUSTOMER_REFERENCE"","
                     jsonPayload = jsonPayload & """value"": """ & invoiceNo & """"
                     jsonPayload = jsonPayload & "},"
                     jsonPayload = jsonPayload & "{"
-                    jsonPayload = jsonPayload & """customerReferenceType"": ""CUSTOMER_REFERENCE"","
+                    'jsonPayload = jsonPayload & """customerReferenceType"": ""CUSTOMER_REFERENCE"","
+                    jsonPayload = jsonPayload & """customerReferenceType"": ""P_O_NUMBER"","
                     jsonPayload = jsonPayload & """value"": """ & wsMacros.Range("D" & nextRow).value & "-" & oddQuantity & """"
                     jsonPayload = jsonPayload & "}"
                     jsonPayload = jsonPayload & "]"
@@ -423,11 +428,13 @@ Sub CreateShipment()
         Else
             jsonPayload = jsonPayload & """customerReferences"": ["
             jsonPayload = jsonPayload & "{"
-            jsonPayload = jsonPayload & """customerReferenceType"": ""P_O_NUMBER"","
+            'jsonPayload = jsonPayload & """customerReferenceType"": ""P_O_NUMBER"","
+            jsonPayload = jsonPayload & """customerReferenceType"": ""CUSTOMER_REFERENCE"","
             jsonPayload = jsonPayload & """value"": """ & invoiceNo & """"
             jsonPayload = jsonPayload & "},"
             jsonPayload = jsonPayload & "{"
-            jsonPayload = jsonPayload & """customerReferenceType"": ""CUSTOMER_REFERENCE"","
+            'jsonPayload = jsonPayload & """customerReferenceType"": ""CUSTOMER_REFERENCE"","
+            jsonPayload = jsonPayload & """customerReferenceType"": ""P_O_NUMBER"","
             jsonPayload = jsonPayload & """value"": """ & wsMacros.Range("M" & nextRow).value & """"
             jsonPayload = jsonPayload & "}"
             jsonPayload = jsonPayload & "],"
@@ -453,8 +460,8 @@ Sub CreateShipment()
            
             ' Make the API request
             Dim url As String
-            url = "https://apis-sandbox.fedex.com/ship/v1/shipments"
-        
+  '          url = "https://apis-sandbox.fedex.com/ship/v1/shipments"
+            url = "https://apis.fedex.com/ship/v1/shipments"
             Dim http As Object
             Set http = CreateObject("WinHttp.WinHttpRequest.5.1")
             http.Open "POST", url, False
@@ -552,8 +559,8 @@ End Sub
 
 Private Function GetAccessToken(apiKey As String, apiPassword As String) As String
     Dim url As String
-    url = "https://apis-sandbox.fedex.com/oauth/token"
-
+'    url = "https://apis-sandbox.fedex.com/oauth/token"
+    url = "https://apis.fedex.com/oauth/token"
     Dim http As Object
     Set http = CreateObject("WinHttp.WinHttpRequest.5.1")
     
@@ -700,6 +707,7 @@ Sub assignBoxSize()
     isOddBox = False
     isXL = False
     isNoShip = False
+    boxes = 0
     If fedexBox = "GROUND" Then
         If brakeSize = "XL" Then
             isXL = True
@@ -734,12 +742,15 @@ Sub assignBoxSize()
             If brakeQuantity = 1 Then
                 boxes = 1
                 weightPerBox = weight
+                shipQuantity = 1
             Else
                 boxes = brakeQuantity
                 weightPerBox = weight / brakeQuantity
                 shipQuantity = 1
             End If
-            isNoShip = True
+            If boxes = 0 Then
+                isNoShip = True
+            End If
         End If
     End If
 End Sub
