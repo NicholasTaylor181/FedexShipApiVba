@@ -193,7 +193,7 @@ Sub CreateShipment()
     
     ' Construct the JSON payload
     If weight > 149 Then
-        isNoShip = False
+        isNoShip = True
         wsMacros.Range("A" & nextRow) = "Overweight"
     End If
     
