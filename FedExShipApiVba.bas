@@ -97,20 +97,22 @@ Sub CreateShipment()
     
     ' Recipient information
     Dim recipientName As String
-    recipientName = wsMacros.Range("N" & nextRow).value
+    recipientName = wsMacros.Range("N" & nextRow).Value
     
     Dim recipientPhoneNumber As String
-    recipientPhoneNumber = wsMacros.Range("P" & nextRow).value
+    recipientPhoneNumber = wsMacros.Range("P" & nextRow).Value
     
     Dim invoiceNo As String
-    invoiceNo = wsMacros.Range("R" & nextRow).value
+    invoiceNo = wsMacros.Range("R" & nextRow).Value
     
-    poNumber = wsMacros.Range("C" & nextRow).value
+    poNumber = wsMacros.Range("C" & nextRow).Value
+    
+    fedexBox = wsMacros.Range("Z" & nextRow).Value
     
     ' Loop until the user enters a value
     Do While recipientPhoneNumber = "0"
         ' Prompt the user for a new value
-        recipientPhoneNumber = InputBox("Enter phone number for " & wsMacros.Range("D" & nextRow).value, "Enter")
+        recipientPhoneNumber = InputBox("Enter phone number for " & wsMacros.Range("D" & nextRow).Value, "Enter")
         
         ' Check if user entered a value
         If recipientPhoneNumber <> "" Then
@@ -121,28 +123,28 @@ Sub CreateShipment()
     Loop
     
     Dim recipientStreetLine1 As String
-    recipientStreetLine1 = wsMacros.Range("H" & nextRow).value
+    recipientStreetLine1 = wsMacros.Range("H" & nextRow).Value
     
     Dim recipientStreetLine2 As String
     
     
-    If wsMacros.Range("I" & nextRow).value = "" Then
+    If wsMacros.Range("I" & nextRow).Value = "" Then
         isStreetLine2 = False
     Else
         isStreetLine2 = True
-        recipientStreetLine2 = wsMacros.Range("I" & nextRow).value
+        recipientStreetLine2 = wsMacros.Range("I" & nextRow).Value
     End If
     
     Dim recipientCity As String
-    recipientCity = wsMacros.Range("J" & nextRow).value
+    recipientCity = wsMacros.Range("J" & nextRow).Value
     
     Dim recipientStateCode As String
-    recipientStateCode = wsMacros.Range("K" & nextRow).value
+    recipientStateCode = wsMacros.Range("K" & nextRow).Value
     If recipientStateCode = "PR" Then isPR = True Else isPR = False
     
     
     Dim recipientPostalCode As String
-    recipientPostalCode = CStr(wsMacros.Range("L" & nextRow).value)
+    recipientPostalCode = CStr(wsMacros.Range("L" & nextRow).Value)
     
     Do While Len(recipientPostalCode) < 5
         recipientPostalCode = "0" & recipientPostalCode
@@ -152,32 +154,32 @@ Sub CreateShipment()
     recipientCountryCode = "US"
     
     ' Package information
-    weight = wsMacros.Range("W" & nextRow).value
+    weight = wsMacros.Range("W" & nextRow).Value
     
     ' Loop until the user enters a value
     Do While weight = 0
         ' Prompt the user for a new value
-        newValue = InputBox("Enter weight for " & wsMacros.Range("D" & nextRow).value, "Enter")
+        newValue = InputBox("Enter weight for " & wsMacros.Range("D" & nextRow).Value, "Enter")
         
         ' Check if user entered a value
         If newValue <> "" Then
             ' Replace A1 value with the user's input
-            weight = newValue * wsMacros.Range("F" & nextRow).value
+            weight = newValue * wsMacros.Range("F" & nextRow).Value
         Else
             ' Notify the user that a value is required
             MsgBox "Please enter weight.", vbExclamation
         End If
     Loop
     
-    If wsMacros.Range("AA" & nextRow).value = "SD" Then isSD = True Else isSD = False
+    If wsMacros.Range("AA" & nextRow).Value = "SD" Then isSD = True Else isSD = False
     
-    deliveryMethod = wsMacros.Range("Z" & nextRow).value
-    brakeQuantity = wsMacros.Range("F" & nextRow).value
-    brakeSize = wsMacros.Range("V" & nextRow).value
+    deliveryMethod = wsMacros.Range("Z" & nextRow).Value
+    brakeQuantity = wsMacros.Range("F" & nextRow).Value
+    brakeSize = wsMacros.Range("V" & nextRow).Value
     
     Do While brakeSize = "0"
         ' Prompt the user for a new value
-        newValue = InputBox("Enter size for " & wsMacros.Range("D" & nextRow).value, "Enter")
+        newValue = InputBox("Enter size for " & wsMacros.Range("D" & nextRow).Value, "Enter")
         
         ' Check if user entered a value
         If newValue <> "" Then
@@ -302,11 +304,11 @@ Sub CreateShipment()
             jsonPayload = jsonPayload & """quantity"": " & brakeQuantity & ","
             jsonPayload = jsonPayload & """quantityUnits"": ""PCS"","
             jsonPayload = jsonPayload & """unitPrice"": {"
-            jsonPayload = jsonPayload & """amount"": " & wsMacros.Range("E" & nextRow).value & ","
+            jsonPayload = jsonPayload & """amount"": " & wsMacros.Range("E" & nextRow).Value & ","
             jsonPayload = jsonPayload & """currency"": ""USD"""
             jsonPayload = jsonPayload & "},"
             jsonPayload = jsonPayload & """customsValue"": {"
-            jsonPayload = jsonPayload & """amount"": " & wsMacros.Range("E" & nextRow).value * brakeQuantity & ","
+            jsonPayload = jsonPayload & """amount"": " & wsMacros.Range("E" & nextRow).Value * brakeQuantity & ","
             jsonPayload = jsonPayload & """currency"": ""USD"""
             jsonPayload = jsonPayload & "},"
             jsonPayload = jsonPayload & """weight"": {"
@@ -380,7 +382,7 @@ Sub CreateShipment()
                 jsonPayload = jsonPayload & "{"
 '                jsonPayload = jsonPayload & """customerReferenceType"": ""CUSTOMER_REFERENCE"","
                 jsonPayload = jsonPayload & """customerReferenceType"": ""P_O_NUMBER"","
-                jsonPayload = jsonPayload & """value"": """ & wsMacros.Range("D" & nextRow).value & "-" & shipQuantity & """"
+                jsonPayload = jsonPayload & """value"": """ & wsMacros.Range("D" & nextRow).Value & "-" & shipQuantity & """"
                 jsonPayload = jsonPayload & "}"
                 jsonPayload = jsonPayload & "]"
                 If isOddBox Then
@@ -417,7 +419,7 @@ Sub CreateShipment()
                     jsonPayload = jsonPayload & "{"
                     'jsonPayload = jsonPayload & """customerReferenceType"": ""CUSTOMER_REFERENCE"","
                     jsonPayload = jsonPayload & """customerReferenceType"": ""P_O_NUMBER"","
-                    jsonPayload = jsonPayload & """value"": """ & wsMacros.Range("D" & nextRow).value & "-" & oddQuantity & """"
+                    jsonPayload = jsonPayload & """value"": """ & wsMacros.Range("D" & nextRow).Value & "-" & oddQuantity & """"
                     jsonPayload = jsonPayload & "}"
                     jsonPayload = jsonPayload & "]"
                     jsonPayload = jsonPayload & "}"
@@ -435,7 +437,7 @@ Sub CreateShipment()
             jsonPayload = jsonPayload & "{"
             'jsonPayload = jsonPayload & """customerReferenceType"": ""CUSTOMER_REFERENCE"","
             jsonPayload = jsonPayload & """customerReferenceType"": ""P_O_NUMBER"","
-            jsonPayload = jsonPayload & """value"": """ & wsMacros.Range("M" & nextRow).value & """"
+            jsonPayload = jsonPayload & """value"": """ & wsMacros.Range("M" & nextRow).Value & """"
             jsonPayload = jsonPayload & "}"
             jsonPayload = jsonPayload & "],"
             jsonPayload = jsonPayload & """weight"": {"
@@ -601,12 +603,12 @@ Sub ProcessCSVFiles()
         Set wbCSV = Workbooks.Open(folderPath & csvFile)
         
         ' Check if D4 has a value
-        If wbCSV.Sheets(1).Range("D4").value <> "" Then
+        If wbCSV.Sheets(1).Range("D4").Value <> "" Then
             ' Close the file without saving changes
             wbCSV.Close False
         Else
             ' Copy B2 value to next available spot in row C of Macros sheet
-            wsMacros.Cells(nextRow, "C").value = wbCSV.Sheets(1).Range("B2").value
+            wsMacros.Cells(nextRow, "C").Value = wbCSV.Sheets(1).Range("B2").Value
             
             ' Refresh the Macros sheet
             ThisWorkbook.RefreshAll
@@ -634,8 +636,8 @@ Sub CheckDateAndSelectFolder()
     Set ws = ThisWorkbook.Sheets("Sheet1")
     
     ' Check if cell A2 contains today's date
-    If ws.Range("A2").value = Date Then
-        folderPath = ws.Range("A1").value
+    If ws.Range("A2").Value = Date Then
+        folderPath = ws.Range("A1").Value
         Exit Sub
     Else
         ' Create a Shell object to browse for folder
@@ -652,8 +654,8 @@ Sub CheckDateAndSelectFolder()
         End If
         
         ' Save the selected folder path in cell A1 of Sheet1
-        ws.Range("A1").value = selectedFolder.Items.Item.Path & "\"
-        ws.Range("A2").value = Date
+        ws.Range("A1").Value = selectedFolder.Items.Item.Path & "\"
+        ws.Range("A2").Value = Date
         folderPath = selectedFolder.Items.Item.Path & "\"
     End If
 End Sub
@@ -671,19 +673,19 @@ Sub VDP_FORMAT()
     Application.Calculation = xlCalculationManual
     Range("U2:V2").NumberFormat = "@"
     Range("U2:V2") = trackingNumber
-    Range("D4").value = Range("C4").value
-    Range("P2").value = TodaysDate
+    Range("D4").Value = Range("C4").Value
+    Range("P2").Value = TodaysDate
     Range("Q2") = deliveryDate
-    Range("S2").value = "LT"
+    Range("S2").Value = "LT"
     Columns("U:U").EntireColumn.AutoFit
     Columns("V:V").EntireColumn.AutoFit
-    Range("R2") = wsMacros.Range("W" & nextRow).value
-    Range("W2").value = wsMacros.Range("S" & nextRow).value
-    Range("Y2").Formula = Range("D4").value * Range("F4").value
+    Range("R2") = wsMacros.Range("W" & nextRow).Value
+    Range("W2").Value = wsMacros.Range("S" & nextRow).Value
+    Range("Y2").Formula = Range("D4").Value * Range("F4").Value
     Columns("A:AC").NumberFormat = "@"
     
     Do While (Len(Range("O2")) < 5)
-        Range("O2") = "0" & Range("O2").value
+        Range("O2") = "0" & Range("O2").Value
     Loop
 
         Application.Calculation = xlCalculationAutomatic
@@ -697,7 +699,7 @@ Sub VDP_FORMAT()
     
     If wsMacros.Range("AB" & nextRow) And wsMacros.Range("AC" & nextRow) And wsMacros.Range("AD" & nextRow) Then
         wsMacros.Rows(nextRow).EntireRow.Select
-        wsMacros.Range("B" & nextRow).EntireRow.value = wsMacros.Range("B" & nextRow).EntireRow.value
+        wsMacros.Range("B" & nextRow).EntireRow.Value = wsMacros.Range("B" & nextRow).EntireRow.Value
     Else
         MsgBox "Test Failed!"
     End If
@@ -727,8 +729,10 @@ Sub assignBoxSize()
           boxLoop (5)
         ElseIf brakeSize = "GM" Then
             boxLoop (2)
+        Else
+            isNoShip = True
         End If
-        isNoShip = True
+
     Else
         If brakeSize = "L" Or brakeSize = "XL" Or brakeSize = "GL" Then
             boxLoop (2)
@@ -809,7 +813,7 @@ Sub MakePullSheet()
     loopNum = 1
     Sheets("PULL").Range("B2:N300").ClearContents
     a = 2
-    strFolder = ThisWorkbook.Sheets("Sheet1").Range("A1").value
+    strFolder = ThisWorkbook.Sheets("Sheet1").Range("A1").Value
     
     ' Set up the file system object
     Set fso = CreateObject("Scripting.FileSystemObject")
@@ -878,3 +882,7 @@ Sub MakePullSheet()
     
     ThisWorkbook.Sheets("BASE BEFORE").Activate
 End Sub
+
+
+
+
